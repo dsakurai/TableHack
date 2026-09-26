@@ -8,6 +8,10 @@
 #include <QApplication>
 #include <QKeyEvent>
 #include <QHeaderView>
+#include <QMenu>
+#include <QAction>
+#include <QSet>
+#include <algorithm>
 
 MyTableWidget::MyTableWidget(QWidget *parent)
     : QTableWidget(parent)
@@ -18,6 +22,13 @@ MyTableWidget::MyTableWidget(QWidget *parent)
     //
     verticalHeader()->setSectionsMovable(true);
     verticalHeader()->setDragEnabled(true);
+
+    // provide context menu on horizontal header for column actions
+    QHeaderView *h = horizontalHeader();
+    if (h) {
+        h->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(h, &QHeaderView::customContextMenuRequested, this, &MyTableWidget::showHeaderContextMenu);
+    }
 }
 
 void MyTableWidget::copyCells(int r0, int r1, int c0, int c1) const
@@ -144,4 +155,32 @@ void MyTableWidget::keyPressEvent(QKeyEvent *event)
         return;
     }
     QTableWidget::keyPressEvent(event);
+}
+
+void MyTableWidget::showHeaderContextMenu(const QPoint &pos)
+{
+    QHeaderView *h = horizontalHeader();
+    if (!h)
+        return;
+    QMenu menu(h);
+    QAction *removeAction = menu.addAction(tr("Remove selected columns"));
+    connect(removeAction, &QAction::triggered, this, &MyTableWidget::removeSelectedColumns);
+    menu.exec(h->mapToGlobal(pos));
+}
+
+void MyTableWidget::removeSelectedColumns()
+{
+    QItemSelectionModel *sel = selectionModel();
+    if (!sel)
+        return;
+    QModelIndexList idxs = sel->selectedIndexes();
+    QSet<int> cols;
+    for (const QModelIndex &idx : idxs)
+        cols.insert(idx.column());
+    if (cols.isEmpty())
+        return;
+    QList<int> colList = cols.values();
+    std::sort(colList.begin(), colList.end(), std::greater<int>());
+    for (int c : colList)
+        removeColumn(c);
 }

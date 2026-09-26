@@ -12,6 +12,8 @@ public slots:
     void copySelectionToClipboard();
     void cutSelectionToClipboard();
     void pasteFromClipboard();
+    void showHeaderContextMenu(const QPoint &pos);
+    void removeSelectedColumns();
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
