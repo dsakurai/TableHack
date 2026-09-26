@@ -16,6 +16,14 @@ public slots:
     void removeSelectedColumns();
     void showVerticalHeaderContextMenu(const QPoint &pos);
     void removeSelectedRows();
+    void addColumn();
+    void addRow();
+    void insertColumnLeft();
+    void insertColumnRight();
+    void insertRowAbove();
+    void insertRowBelow();
+    void insertColumnAt(int index);
+    void insertRowAt(int index);
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;

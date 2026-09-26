@@ -169,8 +169,13 @@ void MyTableWidget::showHeaderContextMenu(const QPoint &pos)
     QHeaderView *h = horizontalHeader();
     if (!h)
         return;
+    int section = h->logicalIndexAt(pos);
     QMenu menu(h);
+    QAction *insertBefore = menu.addAction(tr("Insert column before"));
+    QAction *insertAfter = menu.addAction(tr("Insert column after"));
     QAction *removeAction = menu.addAction(tr("Remove selected columns"));
+    connect(insertBefore, &QAction::triggered, this, [this, section]() { insertColumnAt(qMax(0, section)); });
+    connect(insertAfter, &QAction::triggered, this, [this, section]() { insertColumnAt(section + 1); });
     connect(removeAction, &QAction::triggered, this, &MyTableWidget::removeSelectedColumns);
     menu.exec(h->mapToGlobal(pos));
 }
@@ -210,8 +215,13 @@ void MyTableWidget::showVerticalHeaderContextMenu(const QPoint &pos)
     QHeaderView *h = verticalHeader();
     if (!h)
         return;
+    int section = h->logicalIndexAt(pos);
     QMenu menu(h);
+    QAction *insertBefore = menu.addAction(tr("Insert row before"));
+    QAction *insertAfter = menu.addAction(tr("Insert row after"));
     QAction *removeAction = menu.addAction(tr("Remove selected rows"));
+    connect(insertBefore, &QAction::triggered, this, [this, section]() { insertRowAt(qMax(0, section)); });
+    connect(insertAfter, &QAction::triggered, this, [this, section]() { insertRowAt(section + 1); });
     connect(removeAction, &QAction::triggered, this, &MyTableWidget::removeSelectedRows);
     menu.exec(h->mapToGlobal(pos));
 }
@@ -219,4 +229,135 @@ void MyTableWidget::showVerticalHeaderContextMenu(const QPoint &pos)
 void MyTableWidget::removeSelectedRows()
 {
     removeSelectedLines(Line::Rows);
+}
+
+void MyTableWidget::addColumn()
+{
+    int insertAt = columnCount();
+    QItemSelectionModel *sel = selectionModel();
+    if (sel) {
+        QModelIndexList idxs = sel->selectedIndexes();
+        int maxc = -1;
+        for (const QModelIndex &idx : idxs)
+            maxc = qMax(maxc, idx.column());
+        if (maxc >= 0)
+            insertAt = maxc + 1;
+    }
+    insertColumn(insertAt);
+}
+
+void MyTableWidget::addRow()
+{
+    int insertAt = rowCount();
+    QItemSelectionModel *sel = selectionModel();
+    if (sel) {
+        QModelIndexList idxs = sel->selectedIndexes();
+        int maxr = -1;
+        for (const QModelIndex &idx : idxs)
+            maxr = qMax(maxr, idx.row());
+        if (maxr >= 0)
+            insertAt = maxr + 1;
+    }
+    insertRow(insertAt);
+}
+
+void MyTableWidget::insertColumnAt(int index)
+{
+    // prefer selection-based insertion: if selection present, adjust index
+    QItemSelectionModel *sel = selectionModel();
+    if (sel) {
+        QModelIndexList idxs = sel->selectedIndexes();
+        if (!idxs.isEmpty()) {
+            int minc = INT_MAX, maxc = INT_MIN;
+            for (const QModelIndex &idx : idxs) {
+                minc = qMin(minc, idx.column());
+                maxc = qMax(maxc, idx.column());
+            }
+            // if index equals clicked position, keep it; otherwise use provided index
+            Q_UNUSED(minc);
+            Q_UNUSED(maxc);
+        }
+    }
+    insertColumn(qBound(0, index, columnCount()));
+}
+
+void MyTableWidget::insertRowAt(int index)
+{
+    QItemSelectionModel *sel = selectionModel();
+    if (sel) {
+        QModelIndexList idxs = sel->selectedIndexes();
+        if (!idxs.isEmpty()) {
+            int minr = INT_MAX, maxr = INT_MIN;
+            for (const QModelIndex &idx : idxs) {
+                minr = qMin(minr, idx.row());
+                maxr = qMax(maxr, idx.row());
+            }
+            Q_UNUSED(minr);
+            Q_UNUSED(maxr);
+        }
+    }
+    insertRow(qBound(0, index, rowCount()));
+}
+
+// Backwards-compatible wrappers (old slot names)
+void MyTableWidget::insertColumnLeft()
+{
+    // insert before current selection if any, else at front
+    QItemSelectionModel *sel = selectionModel();
+    int index = 0;
+    if (sel) {
+        QModelIndexList idxs = sel->selectedIndexes();
+        int minc = INT_MAX;
+        for (const QModelIndex &idx : idxs)
+            minc = qMin(minc, idx.column());
+        if (minc != INT_MAX)
+            index = minc;
+    }
+    insertColumnAt(index);
+}
+
+void MyTableWidget::insertColumnRight()
+{
+    // insert after selection if any, else at end
+    QItemSelectionModel *sel = selectionModel();
+    int index = columnCount();
+    if (sel) {
+        QModelIndexList idxs = sel->selectedIndexes();
+        int maxc = -1;
+        for (const QModelIndex &idx : idxs)
+            maxc = qMax(maxc, idx.column());
+        if (maxc >= 0)
+            index = maxc + 1;
+    }
+    insertColumnAt(index);
+}
+
+void MyTableWidget::insertRowAbove()
+{
+    QItemSelectionModel *sel = selectionModel();
+    int index = 0;
+    if (sel) {
+        QModelIndexList idxs = sel->selectedIndexes();
+        int minr = INT_MAX;
+        for (const QModelIndex &idx : idxs)
+            minr = qMin(minr, idx.row());
+        if (minr != INT_MAX)
+            index = minr;
+    }
+    insertRowAt(index);
+}
+
+void MyTableWidget::insertRowBelow()
+{
+    QItemSelectionModel *sel = selectionModel();
+    int index = rowCount();
+    if (sel) {
+        QModelIndexList idxs = sel->selectedIndexes();
+        int maxr = -1;
+        for (const QModelIndex &idx : idxs)
+            maxr = qMax(maxr, idx.row());
+        if (maxr >= 0)
+            index = maxr + 1;
+    }
+    insertRowAt(index);
 }
