@@ -26,7 +26,7 @@ CMAKE_GENERATOR_INSTANCE:INTERNAL=C:/Program Files/Microsoft Visual Studio/18/Co
 Press F5.
 This also initializes and configures the project using commands as defined in `.vscode/tasks.json`
 
-You *could* use the `Build` and `Debug` buttons of the CMakeTool extension, but, for the first time build, you have to press F5. This is because the CMakeTool extension assumes a CMake preset, which becomes valid only after Conan install is run.
+You *could* use the `Build` button of the CMakeTool extension, but, for the first time build, you have to press F5 to invoke the build task in `tasks.json` directly. This is because the CMakeTool extension assumes a CMake preset, which becomes valid only after Conan install is run.
 
 ### Setting Up The Project Manually
 

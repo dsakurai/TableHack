@@ -5,7 +5,19 @@
   "tasks.runTask": "Run: conanrun.ps1",
   "cmake.cmakePath": "${workspaceFolder}\\.venv\\Scripts\\cmake.exe",
   "cmake.buildTask": true,
-  "cmake.debugConfig": {
-    "envFile": "${workspaceFolder}/build/generators/conanrunenv-Debug-x86_64.env"
+  // CMakeTool sets up its own Debug button this way to respect the environment file, but it is simpler to disable the button completely and instead  manage the Debug configuration in `launch.json` only 
+  // "cmake.options.advanced.debug"
+  // "cmake.debugConfig": {
+  //   "envFile": "${workspaceFolder}/build/generators/conanrunenv-Debug-x86_64.env"
+  // },
+  "cmake.options.advanced": {
+    "debug": { // We don't use Debug button since we use the launch.json configuration instead.
+      "statusBarVisibility": "hidden",
+      "projectStatusVisibility": "hidden"
+    },
+    "launch": { // The launch button does not respect the environment file.
+      "statusBarVisibility": "hidden",
+      "projectStatusVisibility": "hidden"
+    }
   }
 }
