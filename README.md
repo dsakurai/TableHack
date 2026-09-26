@@ -24,9 +24,9 @@ CMAKE_GENERATOR_INSTANCE:INTERNAL=C:/Program Files/Microsoft Visual Studio/18/Co
 ### Auto build on VSCode 
 
 Press F5.
-However, first, you must initialize the project as follows.
+This also initializes and configures the project using commands as defined in `.vscode/tasks.json`
 
-### Setting Up The Project:
+### Setting Up The Project Manually
 
 ```powershell
 .\venv\Scripts\activate # Assuming you did `uv sync`
@@ -36,8 +36,8 @@ cd build
 .\.venv\Scripts\conan.exe install .. --build=missing -s build_type=Release
 ```
 
-Or, for a global config of the env var:
-```
+Or, for a global config of the env var in PowerShell:
+```powershell
 [Environment]::SetEnvironmentVariable("CONAN_HOME", "C:\NoWhitespace\conan-cache", "User")
 ```
 
