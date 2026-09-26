@@ -7,10 +7,18 @@
 #include <QClipboard>
 #include <QApplication>
 #include <QKeyEvent>
+#include <QHeaderView>
 
 MyTableWidget::MyTableWidget(QWidget *parent)
     : QTableWidget(parent)
-{ }
+{
+    // Move rows and columns within the table.
+    horizontalHeader()->setSectionsMovable(true);
+    horizontalHeader()->setDragEnabled(true);
+    //
+    verticalHeader()->setSectionsMovable(true);
+    verticalHeader()->setDragEnabled(true);
+}
 
 void MyTableWidget::copyCells(int r0, int r1, int c0, int c1) const
 {
