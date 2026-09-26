@@ -1,0 +1,118 @@
+#include "clipboard_win32.h"
+#include <windows.h>
+#include <string>
+
+QByteArray makeHtmlClipboardData(const QString &htmlFragment)
+{
+    const QString fullHtml =
+        "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n"
+        "<HTML>\n"
+        "<BODY>\n"
+        "<!--StartFragment-->" + htmlFragment + "<!--EndFragment-->\n"
+        "</BODY>\n"
+        "</HTML>\n";
+
+    const QByteArray utf8 = fullHtml.toUtf8();
+
+    int startFragment = QString("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n<HTML>\n<BODY>\n<!--StartFragment-->").toUtf8().size();
+    int endFragment   = startFragment + htmlFragment.toUtf8().size();
+
+    QString header =
+        "Version:0.9\r\n"
+        "StartHTML:%1\r\n"
+        "EndHTML:%2\r\n"
+        "StartFragment:%3\r\n"
+        "EndFragment:%4\r\n"
+        "StartSelection:%3\r\n"
+        "EndSelection:%4\r\n";
+
+    header = header.arg(0, 10, 10, QChar('0'))
+                   .arg(utf8.size(), 10, 10, QChar('0'))
+                   .arg(startFragment, 10, 10, QChar('0'))
+                   .arg(endFragment, 10, 10, QChar('0'));
+
+    QByteArray headerUtf8 = header.toUtf8();
+
+    QByteArray result;
+    result.reserve(headerUtf8.size() + utf8.size() + 1); // +1 for null
+    result.append(headerUtf8);
+    result.append(utf8);
+    result.append('\0'); // null-terminate CF_HTML
+    return result;
+}
+
+void copyHtmlToClipboardWin32(const QString &htmlFragment, const QString &plainText)
+{
+    QByteArray cfHtml = makeHtmlClipboardData(htmlFragment);
+    std::wstring wtext = plainText.toStdWString();
+
+    if (!OpenClipboard(nullptr)) {
+        qWarning("Failed to open clipboard");
+        return;
+    }
+
+    if (!EmptyClipboard()) {
+        CloseClipboard();
+        qWarning("Failed to empty clipboard");
+        return;
+    }
+
+    UINT cfHtmlFormat = RegisterClipboardFormatA("HTML Format");
+    if (!cfHtmlFormat) {
+        CloseClipboard();
+        qWarning("Failed to register HTML Format");
+        return;
+    }
+
+    // CF_HTML (null-terminated already in cfHtml)
+    HGLOBAL hHtml = GlobalAlloc(GMEM_MOVEABLE, cfHtml.size());
+    if (!hHtml) {
+        CloseClipboard();
+        qWarning("GlobalAlloc failed for HTML");
+        return;
+    }
+    void *pHtml = GlobalLock(hHtml);
+    if (!pHtml) {
+        GlobalFree(hHtml);
+        CloseClipboard();
+        qWarning("GlobalLock failed for HTML");
+        return;
+    }
+    memcpy(pHtml, cfHtml.constData(), cfHtml.size());
+    GlobalUnlock(hHtml);
+
+    if (!SetClipboardData(cfHtmlFormat, hHtml)) {
+        GlobalFree(hHtml);
+        CloseClipboard();
+        qWarning("SetClipboardData failed for HTML");
+        return;
+    }
+
+    // CF_UNICODETEXT (null-terminated)
+    size_t bytes = wtext.size() * sizeof(wchar_t);
+    HGLOBAL hText = GlobalAlloc(GMEM_MOVEABLE, bytes + sizeof(wchar_t));
+    if (!hText) {
+        CloseClipboard();
+        qWarning("GlobalAlloc failed for text");
+        return;
+    }
+    void *pText = GlobalLock(hText);
+    if (!pText) {
+        GlobalFree(hText);
+        CloseClipboard();
+        qWarning("GlobalLock failed for text");
+        return;
+    }
+    memcpy(pText, wtext.data(), bytes);
+    ((wchar_t*)pText)[wtext.size()] = L'\0';
+    GlobalUnlock(hText);
+
+    if (!SetClipboardData(CF_UNICODETEXT, hText)) {
+        GlobalFree(hText);
+        CloseClipboard();
+        qWarning("SetClipboardData failed for text");
+        return;
+    }
+
+    CloseClipboard();
+}
