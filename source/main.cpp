@@ -1,201 +1,145 @@
 #include <QApplication>
-#include <QClipboard>
-#include <QMimeData>
-#include <QTableView>
-#include <QItemSelectionModel>
-#include <QAbstractItemModel>
-#include <QTextStream>
-#include <QRect>
-#include <QStandardItemModel>
-#include <QKeyEvent>
-#include <QKeySequence>
-#include <QAbstractItemView>
-
-#ifdef Q_OS_WIN
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
+#include <QPushButton>
+#include <QByteArray>
+#include <QString>
 #include <windows.h>
-#include <cstdio>
-#include <cstring>
+#include <string>
 
-// Writes CF_HTML/CF_UNICODETEXT via the raw Win32 clipboard API.
-// Needed because browsers read the clipboard through GetClipboardData,
-// which does not reliably bridge to Qt's OLE-only "text/html" mime data.
-static bool writeHtmlToWindowsClipboard(HWND hwnd, const QString &html, const QString &plainText)
+static QByteArray makeHtmlClipboardData(const QString &htmlFragment)
 {
-    const QByteArray startMarker = "<!--StartFragment-->";
-    const QByteArray endMarker = "<!--EndFragment-->";
-    const QByteArray body = html.toUtf8();
+    const QString fullHtml =
+        "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n"
+        "<HTML>\n"
+        "<BODY>\n"
+        "<!--StartFragment-->" + htmlFragment + "<!--EndFragment-->\n"
+        "</BODY>\n"
+        "</HTML>\n";
 
-    static const char *headerFmt =
-        "Version:1.0\r\n"
-        "StartHTML:%010d\r\n"
-        "EndHTML:%010d\r\n"
-        "StartFragment:%010d\r\n"
-        "EndFragment:%010d\r\n";
+    const QByteArray utf8 = fullHtml.toUtf8();
 
-    char headerBuf[128];
-    const int headerLen = std::snprintf(headerBuf, sizeof(headerBuf), headerFmt, 0, 0, 0, 0);
-    const int startHtml = headerLen;
-    const int startFragment = startHtml + startMarker.size();
-    const int endFragment = startFragment + body.size();
-    const int endHtml = endFragment + endMarker.size();
-    std::snprintf(headerBuf, sizeof(headerBuf), headerFmt, startHtml, endHtml, startFragment, endFragment);
+    int startFragment = QString("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n<HTML>\n<BODY>\n<!--StartFragment-->").toUtf8().size();
+    int endFragment   = startFragment + htmlFragment.toUtf8().size();
 
-    const QByteArray payload = QByteArray(headerBuf) + startMarker + body + endMarker;
+    QString header =
+        "Version:0.9\r\n"
+        "StartHTML:%1\r\n"
+        "EndHTML:%2\r\n"
+        "StartFragment:%3\r\n"
+        "EndFragment:%4\r\n"
+        "StartSelection:%3\r\n"
+        "EndSelection:%4\r\n";
 
-    const UINT cfHtml = RegisterClipboardFormatA("HTML Format");
-    if (cfHtml == 0 || !OpenClipboard(hwnd))
-        return false;
+    header = header.arg(0, 10, 10, QChar('0'))
+                   .arg(utf8.size(), 10, 10, QChar('0'))
+                   .arg(startFragment, 10, 10, QChar('0'))
+                   .arg(endFragment, 10, 10, QChar('0'));
 
-    EmptyClipboard();
+    QByteArray headerUtf8 = header.toUtf8();
 
-    bool ok = false;
-    if (HGLOBAL hHtml = GlobalAlloc(GMEM_MOVEABLE, payload.size() + 1)) {
-        if (void *dst = GlobalLock(hHtml)) {
-            memcpy(dst, payload.constData(), payload.size());
-            static_cast<char *>(dst)[payload.size()] = '\0';
-            GlobalUnlock(hHtml);
-            ok = SetClipboardData(cfHtml, hHtml) != nullptr;
-        }
+    QByteArray result;
+    result.reserve(headerUtf8.size() + utf8.size());
+    result.append(headerUtf8);
+    result.append(utf8);
+    return result;
+}
+
+static void copyHtmlToClipboardWin32(const QString &htmlFragment, const QString &plainText)
+{
+    QByteArray cfHtml = makeHtmlClipboardData(htmlFragment);
+
+    // Convert plainText to UTF-16 LE (Windows wide string) without BOM
+    std::wstring wtext = plainText.toStdWString();
+
+    if (!OpenClipboard(nullptr)) {
+        qWarning("Failed to open clipboard");
+        return;
     }
 
-    const std::wstring wtext = plainText.toStdWString();
-    const size_t textBytes = (wtext.size() + 1) * sizeof(wchar_t);
-    if (HGLOBAL hText = GlobalAlloc(GMEM_MOVEABLE, textBytes)) {
-        if (void *dst = GlobalLock(hText)) {
-            memcpy(dst, wtext.c_str(), textBytes);
-            GlobalUnlock(hText);
-            SetClipboardData(CF_UNICODETEXT, hText);
-        }
+    if (!EmptyClipboard()) {
+        CloseClipboard();
+        qWarning("Failed to empty clipboard");
+        return;
+    }
+
+    UINT cfHtmlFormat = RegisterClipboardFormatA("HTML Format");
+    if (!cfHtmlFormat) {
+        CloseClipboard();
+        qWarning("Failed to register HTML Format");
+        return;
+    }
+
+    // CF_HTML
+    HGLOBAL hHtml = GlobalAlloc(GMEM_MOVEABLE, cfHtml.size());
+    if (!hHtml) {
+        CloseClipboard();
+        qWarning("GlobalAlloc failed for HTML");
+        return;
+    }
+    void *pHtml = GlobalLock(hHtml);
+    if (!pHtml) {
+        GlobalFree(hHtml);
+        CloseClipboard();
+        qWarning("GlobalLock failed for HTML");
+        return;
+    }
+    memcpy(pHtml, cfHtml.constData(), cfHtml.size());
+    GlobalUnlock(hHtml);
+
+    if (!SetClipboardData(cfHtmlFormat, hHtml)) {
+        GlobalFree(hHtml);
+        CloseClipboard();
+        qWarning("SetClipboardData failed for HTML");
+        return;
+    }
+
+    // CF_UNICODETEXT
+    size_t bytes = wtext.size() * sizeof(wchar_t);
+    HGLOBAL hText = GlobalAlloc(GMEM_MOVEABLE, bytes + sizeof(wchar_t)); // + null
+    if (!hText) {
+        CloseClipboard();
+        qWarning("GlobalAlloc failed for text");
+        return;
+    }
+    void *pText = GlobalLock(hText);
+    if (!pText) {
+        GlobalFree(hText);
+        CloseClipboard();
+        qWarning("GlobalLock failed for text");
+        return;
+    }
+    memcpy(pText, wtext.data(), bytes);
+    ((wchar_t*)pText)[wtext.size()] = L'\0';
+    GlobalUnlock(hText);
+
+    if (!SetClipboardData(CF_UNICODETEXT, hText)) {
+        GlobalFree(hText);
+        CloseClipboard();
+        qWarning("SetClipboardData failed for text");
+        return;
     }
 
     CloseClipboard();
-    return ok;
 }
-#endif
-
-static QString selectionToHtmlTable(QTableView *view)
-{
-    auto *model = view->model();
-    if (!model) return {};
-
-    auto selection = view->selectionModel()->selection();
-    if (selection.isEmpty()) return {};
-
-    // For simplicity, handle only the first continuous range
-    const QItemSelectionRange &range = selection.first();
-
-    QString html;
-    QTextStream out(&html);
-
-    out << "<table>\n";
-
-    for (int row = range.top(); row <= range.bottom(); ++row) {
-        out << "  <tr>\n";
-        for (int col = range.left(); col <= range.right(); ++col) {
-            QModelIndex idx = model->index(row, col, view->rootIndex());
-            QVariant data = model->data(idx, Qt::DisplayRole);
-            QString text = data.toString().toHtmlEscaped();
-
-            out << "    <td>" << text << "</td>\n";
-        }
-        out << "  </tr>\n";
-    }
-
-    out << "</table>";
-    return html;
-}
-
-class HtmlCopyTableView : public QTableView
-{
-    Q_OBJECT
-public:
-    explicit HtmlCopyTableView(QWidget *parent = nullptr)
-        : QTableView(parent)
-    {
-        setEditTriggers(QAbstractItemView::NoEditTriggers);
-    }
-
-protected:
-    void keyPressEvent(QKeyEvent *event) override
-    {
-        if (event->matches(QKeySequence::Copy)) {
-            copySelectionAsHtml();
-            return;
-        }
-        QTableView::keyPressEvent(event);
-    }
-
-private:
-    void copySelectionAsHtml()
-    {
-        QString htmlTable = selectionToHtmlTable(this);
-        if (htmlTable.isEmpty())
-            return;
-
-        // Plain text fallback (tab-separated, newline per row)
-        QString plain = selectionToPlainText(this);
-
-#ifdef Q_OS_WIN
-        if (writeHtmlToWindowsClipboard(reinterpret_cast<HWND>(winId()), htmlTable, plain))
-            return;
-#endif
-
-        auto *mime = new QMimeData;
-        mime->setText(plain);
-
-        // Set HTML format for apps that support it (Excel, Word, browsers, etc.)
-        // On Windows this uses CF_HTML; on other platforms it's "text/html".
-        mime->setData("text/html", htmlTable.toUtf8());
-
-        QApplication::clipboard()->setMimeData(mime);
-    }
-
-    static QString selectionToPlainText(QTableView *view)
-    {
-        auto *model = view->model();
-        if (!model) return {};
-
-        auto selection = view->selectionModel()->selection();
-        if (selection.isEmpty()) return {};
-
-        const QItemSelectionRange &range = selection.first();
-
-        QString text;
-        QTextStream out(&text);
-
-        for (int row = range.top(); row <= range.bottom(); ++row) {
-            for (int col = range.left(); col <= range.right(); ++col) {
-                QModelIndex idx = model->index(row, col, view->rootIndex());
-                out << model->data(idx, Qt::DisplayRole).toString();
-                if (col != range.right())
-                    out << '\t';
-            }
-            if (row != range.bottom())
-                out << '\n';
-        }
-        return text;
-    }
-};
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    QStandardItemModel *model = new QStandardItemModel(5, 4);
-    for (int r = 0; r < 5; ++r)
-        for (int c = 0; c < 4; ++c)
-            model->setItem(r, c, new QStandardItem(QString("R%1C%2").arg(r).arg(c)));
+    QPushButton btn("Copy HTML table (Win32 CF_HTML)");
+    QObject::connect(&btn, &QPushButton::clicked, []() {
+        QString htmlTable =
+            "<table border=\"1\">"
+            "<tr><td>A1</td><td>B1</td></tr>"
+            "<tr><td>A2</td><td>B2</td></tr>"
+            "</table>";
 
-    HtmlCopyTableView view;
-    view.setModel(model);
-    view.setSelectionBehavior(QAbstractItemView::SelectItems);
-    view.setSelectionMode(QAbstractItemView::ContiguousSelection);
-    view.resize(400, 300);
-    view.show();
+        QString plainText = "A1\tB1\r\nA2\tB2";
+
+        copyHtmlToClipboardWin32(htmlTable, plainText);
+    });
+
+    btn.resize(300, 60);
+    btn.show();
 
     return app.exec();
 }
-
-#include "main.moc"
