@@ -29,6 +29,13 @@ MyTableWidget::MyTableWidget(QWidget *parent)
         h->setContextMenuPolicy(Qt::CustomContextMenu);
         connect(h, &QHeaderView::customContextMenuRequested, this, &MyTableWidget::showHeaderContextMenu);
     }
+
+    // context menu for vertical header (rows)
+    QHeaderView *vh = verticalHeader();
+    if (vh) {
+        vh->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(vh, &QHeaderView::customContextMenuRequested, this, &MyTableWidget::showVerticalHeaderContextMenu);
+    }
 }
 
 void MyTableWidget::copyCells(int r0, int r1, int c0, int c1) const
@@ -168,19 +175,48 @@ void MyTableWidget::showHeaderContextMenu(const QPoint &pos)
     menu.exec(h->mapToGlobal(pos));
 }
 
-void MyTableWidget::removeSelectedColumns()
+void MyTableWidget::removeSelectedLines(Line line)
 {
     QItemSelectionModel *sel = selectionModel();
-    if (!sel)
+    if (!sel) return;
+
+    QSet<int> columns; // either column coordinates or row coordinates. Regarding the variable naming, we just assume it's columns
+
+    for (const QModelIndex &cell : sel->selectedIndexes()) {
+        if (line == Line::Columns)
+            columns.insert(cell.column());
+        if (line == Line::Rows)
+            columns.insert(cell.row());
+    }
+    if (columns.isEmpty())
         return;
-    QModelIndexList idxs = sel->selectedIndexes();
-    QSet<int> cols;
-    for (const QModelIndex &idx : idxs)
-        cols.insert(idx.column());
-    if (cols.isEmpty())
+
+    QList<int> columnList = columns.values();
+    std::sort(columnList.begin(), columnList.end(), std::greater<int>());
+    for (int c : columnList)
+        if (line == Line::Columns)
+            removeColumn(c);
+        else if (line == Line::Rows)
+            removeRow(c);
+}
+
+void MyTableWidget::removeSelectedColumns()
+{
+    removeSelectedLines(Line::Columns);
+}
+
+void MyTableWidget::showVerticalHeaderContextMenu(const QPoint &pos)
+{
+    QHeaderView *h = verticalHeader();
+    if (!h)
         return;
-    QList<int> colList = cols.values();
-    std::sort(colList.begin(), colList.end(), std::greater<int>());
-    for (int c : colList)
-        removeColumn(c);
+    QMenu menu(h);
+    QAction *removeAction = menu.addAction(tr("Remove selected rows"));
+    connect(removeAction, &QAction::triggered, this, &MyTableWidget::removeSelectedRows);
+    menu.exec(h->mapToGlobal(pos));
+}
+
+void MyTableWidget::removeSelectedRows()
+{
+    removeSelectedLines(Line::Rows);
 }
