@@ -3,7 +3,7 @@
 #include <QString>
 #include <QWidget>
 #include <QVBoxLayout>
-#include <QTableView>
+#include "MyTableView.h"
 #include <QStandardItemModel>
 #include <clipboard_win32.h>
 
@@ -18,20 +18,11 @@ int main(int argc, char *argv[])
 
     QVBoxLayout *layout = new QVBoxLayout(&window);
 
-    // Table view with sample data
-    QTableView *tableView = new QTableView(&window);
-    QStandardItemModel *model = new QStandardItemModel(3, 3, &window); // 3 rows, 3 columns
-    model->setHorizontalHeaderLabels({"Col A", "Col B", "Col C"});
-    // populate sample 3x3 grid
-    model->setItem(0, 0, new QStandardItem("A1"));
-    model->setItem(0, 1, new QStandardItem("B1"));
-    model->setItem(0, 2, new QStandardItem("C1"));
-    model->setItem(1, 0, new QStandardItem("A2"));
-    model->setItem(1, 1, new QStandardItem("B2"));
-    model->setItem(1, 2, new QStandardItem("C2"));
-    model->setItem(2, 0, new QStandardItem("A3"));
-    model->setItem(2, 1, new QStandardItem("B3"));
-    model->setItem(2, 2, new QStandardItem("C3"));
+    // Table view with sample data (subclassed and moved to MyTableView)
+    MyTableView *tableView = new MyTableView(&window);
+
+    auto* model = new QStandardItemModel(3, 3);
+
     tableView->setModel(model);
 
     // Button to copy HTML table to clipboard (keeps existing behavior)
