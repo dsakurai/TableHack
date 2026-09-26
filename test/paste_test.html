@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Clipboard Paste Test</title>
+<style>
+    body { font-family: sans-serif; margin: 2rem; }
+    #target {
+        border: 2px dashed #888;
+        min-height: 120px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    #target table { border-collapse: collapse; }
+    #target td, #target th { border: 1px solid #333; padding: 4px 8px; }
+    pre {
+        background: #f4f4f4;
+        border: 1px solid #ccc;
+        padding: 0.75rem;
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+</style>
+</head>
+<body>
+    <h1>Clipboard Paste Test</h1>
+    <p>Click inside the box below, then press Ctrl+V.</p>
+
+    <div id="target" contenteditable="true">Paste here...</div>
+
+    <h3>Raw text/html from clipboard</h3>
+    <pre id="rawHtml">(nothing pasted yet)</pre>
+
+    <h3>Raw text/plain from clipboard</h3>
+    <pre id="rawText">(nothing pasted yet)</pre>
+
+    <script>
+        const target = document.getElementById('target');
+        const rawHtml = document.getElementById('rawHtml');
+        const rawText = document.getElementById('rawText');
+
+        target.addEventListener('paste', (event) => {
+            const html = event.clipboardData.getData('text/html');
+            const text = event.clipboardData.getData('text/plain');
+            rawHtml.textContent = html || '(no text/html present)';
+            rawText.textContent = text || '(no text/plain present)';
+        });
+    </script>
+</body>
+</html>
