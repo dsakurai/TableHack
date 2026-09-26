@@ -12,8 +12,6 @@ MyTableWidget::MyTableWidget(QWidget *parent)
     : QTableWidget(parent)
 { }
 
-// removed: copyAllToClipboard() - use copySelectionToClipboard() instead
-
 void MyTableWidget::copyCells(int r0, int r1, int c0, int c1) const
 {
     QAbstractItemModel *m = model();
