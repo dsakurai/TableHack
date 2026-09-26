@@ -4,17 +4,15 @@
 #include <QAbstractItemModel>
 #include <QStringList>
 #include <clipboard_win32.h>
+#include <QClipboard>
+#include <QApplication>
+#include <QKeyEvent>
 
 MyTableView::MyTableView(QWidget *parent)
     : QTableView(parent)
 { }
 
-void MyTableView::copyAllToClipboard()
-{
-    QAbstractItemModel *m = model();
-    if (!m) return;
-    copyCells(0, m->rowCount() - 1, 0, m->columnCount() - 1);
-}
+// removed: copyAllToClipboard() - use copySelectionToClipboard() instead
 
 void MyTableView::copyCells(int r0, int r1, int c0, int c1) const
 {
@@ -47,4 +45,97 @@ void MyTableView::copyCells(int r0, int r1, int c0, int c1) const
     QString plain = lines.join("\r\n");
 
     copyHtmlToClipboardWin32(html, plain);
+}
+
+void MyTableView::copySelectionToClipboard()
+{
+    QItemSelectionModel *sel = selectionModel();
+    if (!sel)
+        return;
+    QModelIndexList idxs = sel->selectedIndexes();
+    int r0 = INT_MAX, r1 = INT_MIN, c0 = INT_MAX, c1 = INT_MIN;
+    for (const QModelIndex &idx : idxs) {
+        r0 = qMin(r0, idx.row());
+        r1 = qMax(r1, idx.row());
+        c0 = qMin(c0, idx.column());
+        c1 = qMax(c1, idx.column());
+    }
+    copyCells(r0, r1, c0, c1);
+}
+
+void MyTableView::cutSelectionToClipboard()
+{
+    QAbstractItemModel *m = model();
+    if (!m)
+        return;
+    QItemSelectionModel *sel = selectionModel();
+    if (!sel)
+        return;
+    QModelIndexList idxs = sel->selectedIndexes();
+    // copy selected range then clear those cells
+    int r0 = INT_MAX, r1 = INT_MIN, c0 = INT_MAX, c1 = INT_MIN;
+    for (const QModelIndex &idx : idxs) {
+        r0 = qMin(r0, idx.row());
+        r1 = qMax(r1, idx.row());
+        c0 = qMin(c0, idx.column());
+        c1 = qMax(c1, idx.column());
+    }
+    copyCells(r0, r1, c0, c1);
+    for (const QModelIndex &idx : idxs)
+        m->setData(idx, QString());
+}
+
+void MyTableView::pasteFromClipboard()
+{
+    QAbstractItemModel *m = model();
+    if (!m)
+        return;
+    const QClipboard *cb = QApplication::clipboard();
+    QString text = cb->text();
+    if (text.isEmpty())
+        return;
+
+    // Determine start position: top-left of selection or (0,0)
+    int startRow = 0, startCol = 0;
+    QModelIndexList idxs = selectionModel() ? selectionModel()->selectedIndexes() : QModelIndexList();
+    if (!idxs.isEmpty()) {
+        int r = INT_MAX, c = INT_MAX;
+        for (const QModelIndex &i : idxs) { r = qMin(r, i.row()); c = qMin(c, i.column()); }
+        startRow = r; startCol = c;
+    }
+
+    QStringList rows = text.split('\n');
+    for (int r = 0; r < rows.size(); ++r) {
+        QString line = rows[r];
+        // trim CR
+        if (!line.isEmpty() && line.endsWith('\r'))
+            line.chop(1);
+        QStringList cells = line.split('\t');
+        for (int c = 0; c < cells.size(); ++c) {
+            int rr = startRow + r;
+            int cc = startCol + c;
+            if (rr < 0 || cc < 0)
+                continue;
+            if (rr >= m->rowCount() || cc >= m->columnCount())
+                continue; // do not expand model here
+            m->setData(m->index(rr, cc), cells[c]);
+        }
+    }
+}
+
+void MyTableView::keyPressEvent(QKeyEvent *event)
+{
+    if ((event->modifiers() & Qt::ControlModifier) && event->key() == Qt::Key_C) {
+        copySelectionToClipboard();
+        return;
+    }
+    if ((event->modifiers() & Qt::ControlModifier) && event->key() == Qt::Key_X) {
+        cutSelectionToClipboard();
+        return;
+    }
+    if ((event->modifiers() & Qt::ControlModifier) && event->key() == Qt::Key_V) {
+        pasteFromClipboard();
+        return;
+    }
+    QTableView::keyPressEvent(event);
 }

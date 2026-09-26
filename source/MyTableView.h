@@ -9,11 +9,14 @@ class MyTableView : public QTableView {
 public:
     explicit MyTableView(QWidget *parent = nullptr);
 public slots:
-    void copyAllToClipboard();
+    void copySelectionToClipboard();
+    void cutSelectionToClipboard();
+    void pasteFromClipboard();
+
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
 
 private:
-    /**
-     * Copies the specified range of cells to the clipboard.
-     */
+    /** Copy the specified range of cells to the clipboard. */
     void copyCells(int r0, int r1, int c0, int c1) const;
 };
