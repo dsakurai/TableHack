@@ -1,4 +1,4 @@
-#include "MyTableView.h"
+#include "MyTableWidget.h"
 #include <QStandardItemModel>
 #include <QStandardItem>
 #include <QAbstractItemModel>
@@ -8,13 +8,13 @@
 #include <QApplication>
 #include <QKeyEvent>
 
-MyTableView::MyTableView(QWidget *parent)
-    : QTableView(parent)
+MyTableWidget::MyTableWidget(QWidget *parent)
+    : QTableWidget(parent)
 { }
 
 // removed: copyAllToClipboard() - use copySelectionToClipboard() instead
 
-void MyTableView::copyCells(int r0, int r1, int c0, int c1) const
+void MyTableWidget::copyCells(int r0, int r1, int c0, int c1) const
 {
     QAbstractItemModel *m = model();
     if (!m) {
@@ -47,7 +47,7 @@ void MyTableView::copyCells(int r0, int r1, int c0, int c1) const
     copyHtmlToClipboardWin32(html, plain);
 }
 
-void MyTableView::copySelectionToClipboard()
+void MyTableWidget::copySelectionToClipboard()
 {
     QItemSelectionModel *sel = selectionModel();
     if (!sel)
@@ -63,7 +63,7 @@ void MyTableView::copySelectionToClipboard()
     copyCells(r0, r1, c0, c1);
 }
 
-void MyTableView::cutSelectionToClipboard()
+void MyTableWidget::cutSelectionToClipboard()
 {
     QAbstractItemModel *m = model();
     if (!m)
@@ -85,7 +85,7 @@ void MyTableView::cutSelectionToClipboard()
         m->setData(idx, QString());
 }
 
-void MyTableView::pasteFromClipboard()
+void MyTableWidget::pasteFromClipboard()
 {
     QAbstractItemModel *m = model();
     if (!m)
@@ -123,7 +123,7 @@ void MyTableView::pasteFromClipboard()
     }
 }
 
-void MyTableView::keyPressEvent(QKeyEvent *event)
+void MyTableWidget::keyPressEvent(QKeyEvent *event)
 {
     if ((event->modifiers() & Qt::ControlModifier) && event->key() == Qt::Key_C) {
         copySelectionToClipboard();
@@ -137,5 +137,5 @@ void MyTableView::keyPressEvent(QKeyEvent *event)
         pasteFromClipboard();
         return;
     }
-    QTableView::keyPressEvent(event);
+    QTableWidget::keyPressEvent(event);
 }

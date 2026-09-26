@@ -9,8 +9,8 @@ add_executable(example)
 target_sources(example
     PRIVATE
     main.cpp
-    MyTableView.cpp
-    MyTableView.h
+    MyTableWidget.cpp
+    MyTableWidget.h
 )
 
 target_link_libraries(example PUBLIC Qt6::Widgets html_clipboard)

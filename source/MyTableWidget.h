@@ -1,13 +1,13 @@
 #pragma once
 
-#include <QTableView>
+#include <QTableWidget>
 
 class QStandardItemModel;
 
-class MyTableView : public QTableView {
+class MyTableWidget : public QTableWidget {
     Q_OBJECT
 public:
-    explicit MyTableView(QWidget *parent = nullptr);
+    explicit MyTableWidget(QWidget *parent = nullptr);
 public slots:
     void copySelectionToClipboard();
     void cutSelectionToClipboard();
