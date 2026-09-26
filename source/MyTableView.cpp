@@ -12,32 +12,39 @@ MyTableView::MyTableView(QWidget *parent)
 void MyTableView::copyAllToClipboard()
 {
     QAbstractItemModel *m = model();
-    if (!m)
-        return;
+    if (!m) return;
+    copyCells(0, m->rowCount() - 1, 0, m->columnCount() - 1);
+}
 
-    QString htmlTable = "<table>";
-    for (int r = 0; r < m->rowCount(); ++r) {
-        htmlTable += "<tr>";
-        for (int c = 0; c < m->columnCount(); ++c) {
+void MyTableView::copyCells(int r0, int r1, int c0, int c1) const
+{
+    QAbstractItemModel *m = model();
+    if (!m) {
+        return;
+    }
+    QString html;
+    html += "<table>";
+    for (int r = r0; r <= r1; ++r) {
+        html += "<tr>";
+        for (int c = c0; c <= c1; ++c) {
             QModelIndex idx = m->index(r, c);
             QString cell = m->data(idx, Qt::DisplayRole).toString();
-            htmlTable += "<td>" + cell.toHtmlEscaped() + "</td>";
+            html += "<td>" + cell.toHtmlEscaped() + "</td>";
         }
-        htmlTable += "</tr>";
+        html += "</tr>";
     }
-    htmlTable += "</table>";
+    html += "</table>";
 
-    QString plainText;
-    for (int r = 0; r < m->rowCount(); ++r) {
+    QStringList lines;
+    for (int r = r0; r <= r1; ++r) {
         QStringList row;
-        for (int c = 0; c < m->columnCount(); ++c) {
+        for (int c = c0; c <= c1; ++c) {
             QModelIndex idx = m->index(r, c);
             row << m->data(idx, Qt::DisplayRole).toString();
         }
-        plainText += row.join('\t');
-        if (r < m->rowCount() - 1)
-            plainText += "\r\n";
+        lines << row.join('\t');
     }
+    QString plain = lines.join("\r\n");
 
-    copyHtmlToClipboardWin32(htmlTable, plainText);
+    copyHtmlToClipboardWin32(html, plain);
 }
