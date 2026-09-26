@@ -16,8 +16,6 @@ public slots:
     void removeSelectedColumns();
     void showVerticalHeaderContextMenu(const QPoint &pos);
     void removeSelectedRows();
-    void addColumn();
-    void addRow();
     void insertColumnLeft();
     void insertColumnRight();
     void insertRowAbove();

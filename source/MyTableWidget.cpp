@@ -231,36 +231,6 @@ void MyTableWidget::removeSelectedRows()
     removeSelectedLines(Line::Rows);
 }
 
-void MyTableWidget::addColumn()
-{
-    int insertAt = columnCount();
-    QItemSelectionModel *sel = selectionModel();
-    if (sel) {
-        QModelIndexList idxs = sel->selectedIndexes();
-        int maxc = -1;
-        for (const QModelIndex &idx : idxs)
-            maxc = qMax(maxc, idx.column());
-        if (maxc >= 0)
-            insertAt = maxc + 1;
-    }
-    insertColumn(insertAt);
-}
-
-void MyTableWidget::addRow()
-{
-    int insertAt = rowCount();
-    QItemSelectionModel *sel = selectionModel();
-    if (sel) {
-        QModelIndexList idxs = sel->selectedIndexes();
-        int maxr = -1;
-        for (const QModelIndex &idx : idxs)
-            maxr = qMax(maxr, idx.row());
-        if (maxr >= 0)
-            insertAt = maxr + 1;
-    }
-    insertRow(insertAt);
-}
-
 void MyTableWidget::insertColumnAt(int index)
 {
     // prefer selection-based insertion: if selection present, adjust index
