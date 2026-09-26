@@ -83,9 +83,9 @@
     },
     {
       "label": "CMake: build conan (debug)",
-      "type": "shell",
-      "command": "${workspaceFolder}\\.venv\\Scripts\\cmake",
-      "args": ["--build", "--preset", "conan-debug"],
+      "type": "cmake",
+      "command": "build",
+      "preset": "conan-debug",
       "dependsOn": "CMake: configure conan-default",
       "group": { "kind": "build", "isDefault": true },
       "presentation": {
