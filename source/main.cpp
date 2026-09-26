@@ -37,17 +37,16 @@ static QByteArray makeHtmlClipboardData(const QString &htmlFragment)
     QByteArray headerUtf8 = header.toUtf8();
 
     QByteArray result;
-    result.reserve(headerUtf8.size() + utf8.size());
+    result.reserve(headerUtf8.size() + utf8.size() + 1); // +1 for null
     result.append(headerUtf8);
     result.append(utf8);
+    result.append('\0'); // null-terminate CF_HTML
     return result;
 }
 
 static void copyHtmlToClipboardWin32(const QString &htmlFragment, const QString &plainText)
 {
     QByteArray cfHtml = makeHtmlClipboardData(htmlFragment);
-
-    // Convert plainText to UTF-16 LE (Windows wide string) without BOM
     std::wstring wtext = plainText.toStdWString();
 
     if (!OpenClipboard(nullptr)) {
@@ -68,7 +67,7 @@ static void copyHtmlToClipboardWin32(const QString &htmlFragment, const QString 
         return;
     }
 
-    // CF_HTML
+    // CF_HTML (null-terminated already in cfHtml)
     HGLOBAL hHtml = GlobalAlloc(GMEM_MOVEABLE, cfHtml.size());
     if (!hHtml) {
         CloseClipboard();
@@ -92,9 +91,9 @@ static void copyHtmlToClipboardWin32(const QString &htmlFragment, const QString 
         return;
     }
 
-    // CF_UNICODETEXT
+    // CF_UNICODETEXT (null-terminated)
     size_t bytes = wtext.size() * sizeof(wchar_t);
-    HGLOBAL hText = GlobalAlloc(GMEM_MOVEABLE, bytes + sizeof(wchar_t)); // + null
+    HGLOBAL hText = GlobalAlloc(GMEM_MOVEABLE, bytes + sizeof(wchar_t));
     if (!hText) {
         CloseClipboard();
         qWarning("GlobalAlloc failed for text");
@@ -125,7 +124,7 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    QPushButton btn("Copy HTML table (Win32 CF_HTML)");
+    QPushButton btn("Copy HTML table (Win32 CF_HTML v2)");
     QObject::connect(&btn, &QPushButton::clicked, []() {
         QString htmlTable =
             "<table border=\"1\">"
