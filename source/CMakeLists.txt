@@ -11,6 +11,8 @@ target_sources(example
     main.cpp
     MyTableWidget.cpp
     MyTableWidget.h
+    VisibleIndexTableWidget.cpp
+    VisibleIndexTableWidget.h
 )
 
 target_link_libraries(example PUBLIC Qt6::Widgets html_clipboard)
