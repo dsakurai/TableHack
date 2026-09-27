@@ -1,9 +1,22 @@
 #include "TableWidget.h"
 
 #include <QKeyEvent>
+#include <QHeaderView>
+#include <QMenu>
 
 TableWidget::TableWidget(QWidget *parent)
     : MinimalTableWidget(parent) {
+    // provide context menu on horizontal header for column actions
+    if (QHeaderView *h = horizontalHeader()) {
+        h->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(h, &QHeaderView::customContextMenuRequested, this, &TableWidget::showHorizontalHeaderContextMenu);
+    }
+
+    // context menu for vertical header (rows)
+    if (QHeaderView *vh = verticalHeader()) {
+        vh->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(vh, &QHeaderView::customContextMenuRequested, this, &TableWidget::showVerticalHeaderContextMenu);
+    }
 }
 
 void TableWidget::keyPressEvent(QKeyEvent *event)
@@ -21,4 +34,60 @@ void TableWidget::keyPressEvent(QKeyEvent *event)
         return;
     }
     QTableWidget::keyPressEvent(event);
+}
+
+struct VisualIndex {
+    int visualIndex;
+    int visualIndexPlusOne;
+};
+
+VisualIndex getVisualIndex(const QHeaderView *h, int logicalIndex) {
+    const int visualIndex = h->visualIndex(logicalIndex);
+    const int num_columns = h->count();
+    const int afterVisualIndex = visualIndex + 1;
+    const int visualIndexPlusOne = (afterVisualIndex < num_columns) ? h->logicalIndex(afterVisualIndex) : num_columns;
+    return VisualIndex{visualIndex, visualIndexPlusOne};
+}
+
+void TableWidget::showHorizontalHeaderContextMenu(const QPoint &pos)
+{
+    QHeaderView *h = horizontalHeader();
+    if (!h) return;
+
+    QMenu menu(h);
+    QAction *insertBefore = menu.addAction(tr("Insert column before"));
+    QAction *insertAfter = menu.addAction(tr("Insert column after"));
+    QAction *removeAction = menu.addAction(tr("Remove selected columns"));
+
+    const int logicalIndex = h->logicalIndexAt(pos);
+    VisualIndex vi = getVisualIndex(h, logicalIndex);
+
+    connect(insertBefore, &QAction::triggered, this, [this, vi]() { insertColumn(vi.visualIndex); });
+    connect(insertAfter, &QAction::triggered, this,  [this, vi]() { insertColumn(vi.visualIndexPlusOne); });
+    connect(removeAction, &QAction::triggered, this, [this]() { removeSelectedLine(RowOrColumn::Column); });
+
+    // Show the context menu at the position of the cursor.
+    menu.exec(h->mapToGlobal(pos));
+}
+
+
+void TableWidget::showVerticalHeaderContextMenu(const QPoint &pos)
+{
+    QHeaderView *h = verticalHeader();
+    if (!h) return;
+    
+    QMenu menu(h);
+    QAction *insertBefore = menu.addAction(tr("Insert row before"));
+    QAction *insertAfter = menu.addAction(tr("Insert row after"));
+    QAction *removeAction = menu.addAction(tr("Remove selected rows"));
+    
+    const int logicalIndex = h->logicalIndexAt(pos);
+    VisualIndex vi = getVisualIndex(h, logicalIndex);
+
+    connect(insertBefore, &QAction::triggered, this, [this, vi]() { insertRow(vi.visualIndex); });
+    connect(insertAfter, &QAction::triggered, this,  [this, vi]() { insertRow(vi.visualIndexPlusOne); });
+    connect(removeAction, &QAction::triggered, this, [this]() { removeSelectedLine(RowOrColumn::Row); });
+
+    // Show the context menu at the position of the cursor.
+    menu.exec(h->mapToGlobal(pos));
 }
