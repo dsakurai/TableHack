@@ -43,7 +43,7 @@ def cmd_build(args):
 
     cmake = VENV_SCRIPTS / "cmake.exe"
     run(
-        [str(cmake), "--preset", "conan-default", f"-DCMAKE_CONFIGURATION_TYPES={config}"],
+        [str(cmake), "--preset", f"conan-{config.lower()}-default", f"-DCMAKE_CONFIGURATION_TYPES={config}"],
         cwd=WORKSPACE,
     )
 

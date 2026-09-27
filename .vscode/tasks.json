@@ -11,6 +11,13 @@
       "options": {"cwd": "${workspaceFolder}"},
     },
     {
+      "label": "Python: build (Debug)",
+      "type": "shell",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\python",
+      "args": ["scripts\\build.py", "build", "Debug"],
+      "dependsOn": "uv: sync",
+    },
+    {
       "label": "Python: build (Release)",
       "type": "shell",
       "command": "${workspaceFolder}\\.venv\\Scripts\\python",
@@ -18,19 +25,24 @@
       "dependsOn": "uv: sync",
     },
     { // This is visible from the CMakeTool extension in VS Code
-      // "label": "CMake: build conan (debug)",
+      "label": "CMake: build (Debug)",
+      "type": "cmake",
+      "command": "build",
+      "preset": "conan-debug-debug",
+      "dependsOn": "Python: build (Debug)",
+    },
+    { // This is visible from the CMakeTool extension in VS Code
       "label": "CMake: build (Release)",
       "type": "cmake",
       "command": "build",
-      // "preset": "conan-debug",
-      "preset": "conan-release",
+      "preset": "conan-release-release",
       "dependsOn": "Python: build (Release)",
     },
     {
       "label": "CMake: deploy (Release)",
       "type": "shell",
       "command": "${workspaceFolder}\\.venv\\Scripts\\cmake",
-      "args": ["--build", "${workspaceFolder}\\build-Release", "--preset", "conan-release", "--config", "Release", "--target", "deploy"],
+      "args": ["--build", "${workspaceFolder}\\build-Release", "--preset", "conan-release-release", "--config", "Release", "--target", "deploy"],
       "dependsOn": "Python: build (Release)",
     },
     {

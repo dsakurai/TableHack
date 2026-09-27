@@ -5,13 +5,12 @@
       "name": "C++ - Launch Example (Debug)",
       "type": "cppvsdbg",
       "request": "launch",
-      // "program": "${workspaceFolder}/build/Debug/example.exe",
-      "program": "${workspaceFolder}/build/Release/example.exe",
-      "envFile": "${workspaceFolder}/build/generators/conanrunenv-Release-x86_64.env",
+      "program": "${workspaceFolder}/build-Debug/Debug/example.exe",
+      "envFile": "${workspaceFolder}/build-Debug/generators/conanrunenv-Debug-x86_64.env",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
-      "preLaunchTask": "CMake: build conan (debug)",
+      "preLaunchTask": "CMake: build (Debug)",
     },
   ]
 }
