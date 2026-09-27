@@ -199,14 +199,21 @@ void MyTableWidget::showHorizontalHeaderContextMenu(const QPoint &pos)
     QHeaderView *h = horizontalHeader();
     if (!h)
         return;
-    int section = h->logicalIndexAt(pos);
+    const int logicalIndex = h->logicalIndexAt(pos);
+    const int visualIndex = h->visualIndex(logicalIndex);
+    const int num_columns = h->count();
+    const int afterVisualIndex = visualIndex + 1;
+    const int visualIndexPlusOne = (afterVisualIndex < num_columns) ? h->logicalIndex(afterVisualIndex) : num_columns;
+
     QMenu menu(h);
     QAction *insertBefore = menu.addAction(tr("Insert column before"));
     QAction *insertAfter = menu.addAction(tr("Insert column after"));
     QAction *removeAction = menu.addAction(tr("Remove selected columns"));
-    connect(insertBefore, &QAction::triggered, this, [this, section]() { insertColumnAt(qMax(0, section)); });
-    connect(insertAfter, &QAction::triggered, this, [this, section]() { insertColumnAt(section + 1); });
+    connect(insertBefore, &QAction::triggered, this, [this, visualIndex]() { insertColumn(visualIndex); });
+    connect(insertAfter, &QAction::triggered, this,  [this, visualIndexPlusOne]() { insertColumn(visualIndexPlusOne); });
     connect(removeAction, &QAction::triggered, this, &MyTableWidget::removeSelectedColumns);
+
+    // Show the context menu at the position of the cursor.
     menu.exec(h->mapToGlobal(pos));
 }
 
@@ -261,26 +268,6 @@ void MyTableWidget::removeSelectedRows()
     removeSelectedLines(Line::Rows);
 }
 
-void MyTableWidget::insertColumnAt(int index)
-{
-    // prefer selection-based insertion: if selection present, adjust index
-    QItemSelectionModel *sel = selectionModel();
-    if (sel) {
-        QModelIndexList idxs = sel->selectedIndexes();
-        if (!idxs.isEmpty()) {
-            int minc = INT_MAX, maxc = INT_MIN;
-            for (const QModelIndex &idx : idxs) {
-                minc = qMin(minc, idx.column());
-                maxc = qMax(maxc, idx.column());
-            }
-            // if index equals clicked position, keep it; otherwise use provided index
-            Q_UNUSED(minc);
-            Q_UNUSED(maxc);
-        }
-    }
-    insertColumn(qBound(0, index, columnCount()));
-}
-
 void MyTableWidget::insertRowAt(int index)
 {
     QItemSelectionModel *sel = selectionModel();
@@ -297,39 +284,6 @@ void MyTableWidget::insertRowAt(int index)
         }
     }
     insertRow(qBound(0, index, rowCount()));
-}
-
-// Backwards-compatible wrappers (old slot names)
-void MyTableWidget::insertColumnLeft()
-{
-    // insert before current selection if any, else at front
-    QItemSelectionModel *sel = selectionModel();
-    int index = 0;
-    if (sel) {
-        QModelIndexList idxs = sel->selectedIndexes();
-        int minc = INT_MAX;
-        for (const QModelIndex &idx : idxs)
-            minc = qMin(minc, idx.column());
-        if (minc != INT_MAX)
-            index = minc;
-    }
-    insertColumnAt(index);
-}
-
-void MyTableWidget::insertColumnRight()
-{
-    // insert after selection if any, else at end
-    QItemSelectionModel *sel = selectionModel();
-    int index = columnCount();
-    if (sel) {
-        QModelIndexList idxs = sel->selectedIndexes();
-        int maxc = -1;
-        for (const QModelIndex &idx : idxs)
-            maxc = qMax(maxc, idx.column());
-        if (maxc >= 0)
-            index = maxc + 1;
-    }
-    insertColumnAt(index);
 }
 
 void MyTableWidget::insertRowAbove()
