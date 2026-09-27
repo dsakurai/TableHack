@@ -2,6 +2,21 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "uv: sync",
+      "type": "shell",
+      "command": "uv",
+      "args": [
+        "sync",
+      ],
+      "options": {"cwd": "${workspaceFolder}"},
+      "presentation": {
+        "reveal": "silent",
+        "echo": true,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Create build folder",
       "type": "shell",
       "command": "powershell",
@@ -20,23 +35,8 @@
         "echo": true,
         "panel": "shared"
       },
-      "problemMatcher": []
-    },
-    {
-      "label": "uv: sync",
-      "type": "shell",
-      "command": "uv",
-      "args": [
-        "sync",
-      ],
-      "options": {"cwd": "${workspaceFolder}"},
-      "presentation": {
-        "reveal": "silent",
-        "echo": true,
-        "panel": "shared"
-      },
-      "dependsOn": "Create build folder",
-      "problemMatcher": []
+      "problemMatcher": [],
+      "dependsOn": "uv: sync",
     },
     {
       "label": "Conan: install",
@@ -63,7 +63,7 @@
         "echo": true,
         "panel": "shared"
       },
-      "dependsOn": ["uv: sync"],
+      "dependsOn": ["Create build folder"],
       "problemMatcher": []
     },
     {
