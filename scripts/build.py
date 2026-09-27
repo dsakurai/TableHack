@@ -8,9 +8,10 @@ from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parent.parent
 VENV_SCRIPTS = WORKSPACE / ".venv" / "Scripts"
-BUILD_DIR = WORKSPACE / "build"
-DEPLOY_DIR = BUILD_DIR / "deploy" / "release" / "example-portable"
-ZIP_PATH = BUILD_DIR / "example-portable.zip"
+
+
+def build_dir(config):
+    return WORKSPACE / f"build-{config}"
 
 
 def run(args, cwd, env=None):
@@ -20,8 +21,10 @@ def run(args, cwd, env=None):
         sys.exit(result.returncode)
 
 
-def cmd_build(_args):
-    BUILD_DIR.mkdir(exist_ok=True)
+def cmd_build(args):
+    config = args.config
+    build = build_dir(config)
+    build.mkdir(exist_ok=True)
 
     conan_env = os.environ.copy()
     conan_env["Path"] = f"{VENV_SCRIPTS}{os.pathsep}{conan_env.get('Path', '')}"
@@ -29,37 +32,42 @@ def cmd_build(_args):
         [
             str(VENV_SCRIPTS / "conan.exe"), "install", "..",
             "--build=missing",
-            "-s", "build_type=Release",
-            "-s", "&:build_type=Release",
+            "-s", f"build_type={config}",
+            "-s", f"&:build_type={config}",
             "-c", "tools.env.virtualenv:powershell=powershell.exe",
             "-c", "tools.env:dotenv=true",
         ],
-        cwd=BUILD_DIR,
+        cwd=build,
         env=conan_env,
     )
 
     cmake = VENV_SCRIPTS / "cmake.exe"
     run(
-        [str(cmake), "--preset", "conan-default", "-DCMAKE_CONFIGURATION_TYPES=Release"],
+        [str(cmake), "--preset", "conan-default", f"-DCMAKE_CONFIGURATION_TYPES={config}"],
         cwd=WORKSPACE,
     )
 
 
-def cmd_package(_args):
-    if not DEPLOY_DIR.is_dir():
-        print(f"Deploy folder not found: {DEPLOY_DIR}", file=sys.stderr)
+def cmd_package(args):
+    config = args.config
+    build = build_dir(config)
+    deploy_dir = build / "deploy" / config.lower() / "example-portable"
+    zip_path = build / "example-portable.zip"
+
+    if not deploy_dir.is_dir():
+        print(f"Deploy folder not found: {deploy_dir}", file=sys.stderr)
         sys.exit(1)
 
-    if ZIP_PATH.exists():
-        ZIP_PATH.unlink()
+    if zip_path.exists():
+        zip_path.unlink()
 
     # Zip the deploy folder's contents at the archive root, not the folder itself.
-    with zipfile.ZipFile(ZIP_PATH, "w", zipfile.ZIP_DEFLATED) as zf:
-        for path in DEPLOY_DIR.rglob("*"):
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+        for path in deploy_dir.rglob("*"):
             if path.is_file():
-                zf.write(path, path.relative_to(DEPLOY_DIR))
+                zf.write(path, path.relative_to(deploy_dir))
 
-    print(f"Created {ZIP_PATH}")
+    print(f"Created {zip_path}")
 
 
 def main():
@@ -67,9 +75,11 @@ def main():
     subparsers = parser.add_subparsers(required=True)
 
     build_parser = subparsers.add_parser("build", help="Conan install + CMake configure/build")
+    build_parser.add_argument("config", choices=["Debug", "Release"])
     build_parser.set_defaults(func=cmd_build)
 
     package_parser = subparsers.add_parser("package", help="Zip the deployed portable build")
+    package_parser.add_argument("config", choices=["Debug", "Release"])
     package_parser.set_defaults(func=cmd_package)
 
     args = parser.parse_args()

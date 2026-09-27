@@ -24,6 +24,9 @@ class QtConan(ConanFile):
 
     def layout(self):
         cmake_layout(self)
+        # Keep Debug/Release outputs side by side instead of sharing one "build" folder.
+        self.folders.build = f"build-{self.settings.build_type}"
+        self.folders.generators = f"{self.folders.build}/generators"
 
     def generate(self):
         deps = CMakeDeps(self)

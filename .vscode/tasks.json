@@ -20,7 +20,7 @@
       "label": "Python: build",
       "type": "shell",
       "command": "${workspaceFolder}\\.venv\\Scripts\\python",
-      "args": ["scripts\\build.py", "build"],
+      "args": ["scripts\\build.py", "build", "Release"],
       "options": {"cwd": "${workspaceFolder}"},
       "group": { "kind": "build", "isDefault": true },
       "presentation": {
@@ -51,7 +51,7 @@
       "label": "CMake: deploy (Release)",
       "type": "shell",
       "command": "${workspaceFolder}\\.venv\\Scripts\\cmake",
-      "args": ["--build", "${workspaceFolder}\\build", "--preset", "conan-release", "--config", "Release", "--target", "deploy"],
+      "args": ["--build", "${workspaceFolder}\\build-Release", "--preset", "conan-release", "--config", "Release", "--target", "deploy"],
       "group": "build",
       "presentation": {
         "echo": true,
@@ -64,7 +64,7 @@
       "label": "Python: package deploy ZIP",
       "type": "shell",
       "command": "${workspaceFolder}\\.venv\\Scripts\\python",
-      "args": ["scripts\\build.py", "package"],
+      "args": ["scripts\\build.py", "package", "Release"],
       "options": {"cwd": "${workspaceFolder}"},
       "group": "build",
       "presentation": { "echo": true, "panel": "shared" },
