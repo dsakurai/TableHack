@@ -25,15 +25,13 @@ MyTableWidget::MyTableWidget(QWidget *parent)
     verticalHeader()->setDragEnabled(true);
 
     // provide context menu on horizontal header for column actions
-    QHeaderView *h = horizontalHeader();
-    if (h) {
+    if (QHeaderView *h = horizontalHeader()) {
         h->setContextMenuPolicy(Qt::CustomContextMenu);
-        connect(h, &QHeaderView::customContextMenuRequested, this, &MyTableWidget::showHeaderContextMenu);
+        connect(h, &QHeaderView::customContextMenuRequested, this, &MyTableWidget::showHorizontalHeaderContextMenu);
     }
 
     // context menu for vertical header (rows)
-    QHeaderView *vh = verticalHeader();
-    if (vh) {
+    if (QHeaderView *vh = verticalHeader()) {
         vh->setContextMenuPolicy(Qt::CustomContextMenu);
         connect(vh, &QHeaderView::customContextMenuRequested, this, &MyTableWidget::showVerticalHeaderContextMenu);
     }
@@ -196,7 +194,7 @@ void MyTableWidget::keyPressEvent(QKeyEvent *event)
     QTableWidget::keyPressEvent(event);
 }
 
-void MyTableWidget::showHeaderContextMenu(const QPoint &pos)
+void MyTableWidget::showHorizontalHeaderContextMenu(const QPoint &pos)
 {
     QHeaderView *h = horizontalHeader();
     if (!h)

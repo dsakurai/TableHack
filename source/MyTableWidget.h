@@ -14,7 +14,7 @@ public slots:
     void copySelectionToClipboard();
     void cutSelectionToClipboard();
     void pasteFromClipboard();
-    void showHeaderContextMenu(const QPoint &pos);
+    void showHorizontalHeaderContextMenu(const QPoint &pos);
     void removeSelectedColumns();
     void showVerticalHeaderContextMenu(const QPoint &pos);
     void removeSelectedRows();
