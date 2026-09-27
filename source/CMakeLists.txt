@@ -11,6 +11,8 @@ target_sources(example
     main.cpp
     MyTableWidget_obsolete.cpp
     MyTableWidget_obsolete.h
+    TableWidget.cpp
+    TableWidget.h
     VisibleIndexTableWidget.cpp
     VisibleIndexTableWidget.h
 )

@@ -3,10 +3,7 @@
 #include <QString>
 #include <QWidget>
 #include <QVBoxLayout>
-#include "MyTableWidget.h"
-#include "VisibleIndexTableWidget.h"
-#include <QTableWidget>
-#include <clipboard_win32.h>
+#include "TableWidget.h"
 
 
 int main(int argc, char *argv[])
@@ -20,7 +17,7 @@ int main(int argc, char *argv[])
     QVBoxLayout *layout = new QVBoxLayout(&window);
 
     // Table widget with sample data (use QTableWidget for simple headers)
-    auto *tableWidget = new VisibleIndexTableWidget(&window);
+    auto *tableWidget = new TableWidget(&window);
     tableWidget->setRowCount(3);
     tableWidget->setColumnCount(3);
 
