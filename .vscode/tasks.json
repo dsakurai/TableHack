@@ -49,7 +49,8 @@
         "-Command",
         // `-s   build_type=Release` sets the overall build type for the dependencies.
         // `-s &:build_type=Release` sets the build type for this project's source code.
-        "& '../.venv/Scripts/conan.exe' install .. --build=missing -s build_type=Release -s `&:build_type=Debug -c tools.env.virtualenv:powershell=powershell.exe -c tools.env:dotenv=true"
+        // "& '../.venv/Scripts/conan.exe' install .. --build=missing -s build_type=Release -s `&:build_type=Debug -c tools.env.virtualenv:powershell=powershell.exe -c tools.env:dotenv=true"
+        "& '../.venv/Scripts/conan.exe' install .. --build=missing -s build_type=Release -s `&:build_type=Release -c tools.env.virtualenv:powershell=powershell.exe -c tools.env:dotenv=true"
       ],
       "options": {
         "cwd": "${workspaceFolder}/build",
@@ -70,7 +71,9 @@
       "type": "shell",
       "command": "${workspaceFolder}\\.venv\\Scripts\\cmake",
       "args": ["--preset", "conan-default",
-               "-DCMAKE_CONFIGURATION_TYPES=Debug" // Explicitly set here because Conan forgets to set this cache variable for MSVC.
+              // Explicitly set here because Conan forgets to set this cache variable for MSVC.
+              //  "-DCMAKE_CONFIGURATION_TYPES=Debug"
+               "-DCMAKE_CONFIGURATION_TYPES=Release"
             ],
       "group": "build",
       "presentation": {
@@ -82,10 +85,12 @@
       "dependsOn": "Conan: install",
     },
     {
-      "label": "CMake: build conan (debug)",
+      // "label": "CMake: build conan (debug)",
+      "label": "CMake: build conan (release)",
       "type": "cmake",
       "command": "build",
-      "preset": "conan-debug",
+      // "preset": "conan-debug",
+      "preset": "conan-release",
       "dependsOn": "CMake: configure conan-default",
       "group": { "kind": "build", "isDefault": true },
       "presentation": {
@@ -93,6 +98,37 @@
         "echo": true,
         "panel": "shared"
       },
+      "problemMatcher": []
+    },
+    {
+      "label": "CMake: deploy (Release)",
+      "type": "shell",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\cmake",
+      "args": ["--build", "${workspaceFolder}\\build", "--preset", "conan-release", "--config", "Release", "--target", "deploy"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "panel": "shared"
+      },
+      "dependsOn": "CMake: build conan (release)",
+      "problemMatcher": []
+    },
+    {
+      "label": "Package: deploy ZIP",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\.vscode\\package_deploy.ps1",
+        "-Workspace",
+        "${workspaceFolder}"
+      ],
+      "group": "build",
+      "presentation": { "echo": true, "panel": "shared" },
+      "dependsOn": "CMake: deploy (Release)",
       "problemMatcher": []
     },
   ]
