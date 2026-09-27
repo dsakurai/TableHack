@@ -1,4 +1,4 @@
-#include "MyTableWidget.h"
+#include "MinimalTableWidget.h"
 #include <QStandardItemModel>
 #include <QStandardItem>
 #include <QAbstractItemModel>
@@ -14,7 +14,7 @@
 #include <QSet>
 #include <algorithm>
 
-MyTableWidget::MyTableWidget(QWidget *parent)
+MinimalTableWidget::MinimalTableWidget(QWidget *parent)
     : QTableWidget(parent)
 {
     // Move rows and columns within the table.
@@ -27,19 +27,19 @@ MyTableWidget::MyTableWidget(QWidget *parent)
     // provide context menu on horizontal header for column actions
     if (QHeaderView *h = horizontalHeader()) {
         h->setContextMenuPolicy(Qt::CustomContextMenu);
-        connect(h, &QHeaderView::customContextMenuRequested, this, &MyTableWidget::showHorizontalHeaderContextMenu);
+        connect(h, &QHeaderView::customContextMenuRequested, this, &MinimalTableWidget::showHorizontalHeaderContextMenu);
     }
 
     // context menu for vertical header (rows)
     if (QHeaderView *vh = verticalHeader()) {
         vh->setContextMenuPolicy(Qt::CustomContextMenu);
-        connect(vh, &QHeaderView::customContextMenuRequested, this, &MyTableWidget::showVerticalHeaderContextMenu);
+        connect(vh, &QHeaderView::customContextMenuRequested, this, &MinimalTableWidget::showVerticalHeaderContextMenu);
     }
 }
 
 class VisibleIndex {
 public:
-    VisibleIndex(const QModelIndex& idx, const MyTableWidget *w)
+    VisibleIndex(const QModelIndex& idx, const MinimalTableWidget *w)
         : index_(idx), tableWidget_(w) {}
     
     int row() const { 
@@ -50,10 +50,10 @@ public:
     }
 private:
     const QModelIndex index_;
-    const QPointer<const MyTableWidget> tableWidget_;
+    const QPointer<const MinimalTableWidget> tableWidget_;
 };
 
-void MyTableWidget::copyCells(const QModelIndexList &idxs) const
+void MinimalTableWidget::copyCells(const QModelIndexList &idxs) const
 {
     if (idxs.isEmpty())
         return;
@@ -110,7 +110,7 @@ void MyTableWidget::copyCells(const QModelIndexList &idxs) const
     copyHtmlToClipboardWin32(html, plain);
 }
 
-void MyTableWidget::copySelectionToClipboard()
+void MinimalTableWidget::copySelectionToClipboard()
 {
     QItemSelectionModel *sel = selectionModel();
     if (!sel)
@@ -118,7 +118,7 @@ void MyTableWidget::copySelectionToClipboard()
     copyCells(sel->selectedIndexes());
 }
 
-void MyTableWidget::cutSelectionToClipboard()
+void MinimalTableWidget::cutSelectionToClipboard()
 {
     QAbstractItemModel *m = model();
     if (!m) return;
@@ -135,7 +135,7 @@ void MyTableWidget::cutSelectionToClipboard()
         m->setData(idx, QString());
 }
 
-void MyTableWidget::pasteFromClipboard()
+void MinimalTableWidget::pasteFromClipboard()
 {
     QAbstractItemModel *m = model();
     if (!m)
@@ -177,7 +177,7 @@ void MyTableWidget::pasteFromClipboard()
     }
 }
 
-void MyTableWidget::keyPressEvent(QKeyEvent *event)
+void MinimalTableWidget::keyPressEvent(QKeyEvent *event)
 {
     if ((event->modifiers() & Qt::ControlModifier) && event->key() == Qt::Key_C) {
         copySelectionToClipboard();
@@ -207,7 +207,7 @@ VisualIndex getVisualIndex(const QHeaderView *h, int logicalIndex) {
     return VisualIndex{visualIndex, visualIndexPlusOne};
 }
 
-void MyTableWidget::showHorizontalHeaderContextMenu(const QPoint &pos)
+void MinimalTableWidget::showHorizontalHeaderContextMenu(const QPoint &pos)
 {
     QHeaderView *h = horizontalHeader();
     if (!h) return;
@@ -228,7 +228,7 @@ void MyTableWidget::showHorizontalHeaderContextMenu(const QPoint &pos)
     menu.exec(h->mapToGlobal(pos));
 }
 
-void MyTableWidget::removeSelectedLine(RowOrColumn rc)
+void MinimalTableWidget::removeSelectedLine(RowOrColumn rc)
 {
     QItemSelectionModel *sel = selectionModel();
     if (!sel) return;
@@ -251,7 +251,7 @@ void MyTableWidget::removeSelectedLine(RowOrColumn rc)
             removeRow(c);
 }
 
-void MyTableWidget::showVerticalHeaderContextMenu(const QPoint &pos)
+void MinimalTableWidget::showVerticalHeaderContextMenu(const QPoint &pos)
 {
     QHeaderView *h = verticalHeader();
     if (!h) return;

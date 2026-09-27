@@ -1,15 +1,13 @@
 #pragma once
 
 #include <QTableWidget>
-#include <QModelIndex>
-#include <QModelIndexList>
 
 class QStandardItemModel;
 
-class MyTableWidget : public QTableWidget {
+class MinimalTableWidget : public QTableWidget {
     Q_OBJECT
 public:
-    explicit MyTableWidget(QWidget *parent = nullptr);
+    explicit MinimalTableWidget(QWidget *parent = nullptr);
 public slots:
     void copySelectionToClipboard();
     void cutSelectionToClipboard();
@@ -32,3 +30,4 @@ private:
     /** Remove the selected rows or columns. */
     void removeSelectedLine(RowOrColumn rc);
 };
+
