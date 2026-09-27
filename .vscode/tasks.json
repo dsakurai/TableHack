@@ -14,21 +14,12 @@
         "echo": true,
         "panel": "shared"
       },
-      "problemMatcher": []
     },
     {
       "label": "Python: build",
       "type": "shell",
       "command": "${workspaceFolder}\\.venv\\Scripts\\python",
       "args": ["scripts\\build.py", "build", "Release"],
-      "options": {"cwd": "${workspaceFolder}"},
-      "group": { "kind": "build", "isDefault": true },
-      "presentation": {
-        "reveal": "silent",
-        "echo": true,
-        "panel": "shared"
-      },
-      "problemMatcher": [],
       "dependsOn": "uv: sync",
     },
     { // This is visible from the CMakeTool extension in VS Code
@@ -38,13 +29,6 @@
       "command": "build",
       // "preset": "conan-debug",
       "preset": "conan-release",
-      "group": { "kind": "build", "isDefault": true },
-      "presentation": {
-        "reveal": "silent",
-        "echo": true,
-        "panel": "shared"
-      },
-      "problemMatcher": [],
       "dependsOn": "Python: build",
     },
     {
@@ -52,13 +36,7 @@
       "type": "shell",
       "command": "${workspaceFolder}\\.venv\\Scripts\\cmake",
       "args": ["--build", "${workspaceFolder}\\build-Release", "--preset", "conan-release", "--config", "Release", "--target", "deploy"],
-      "group": "build",
-      "presentation": {
-        "echo": true,
-        "panel": "shared"
-      },
       "dependsOn": "CMake: build (release)",
-      "problemMatcher": []
     },
     {
       "label": "Python: package deploy ZIP",
