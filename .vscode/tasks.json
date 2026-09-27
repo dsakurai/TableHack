@@ -28,6 +28,7 @@
       "label": "CMake: build (Debug)",
       "type": "cmake",
       "command": "build",
+      "targets": ["ALL_BUILD"], // CMakeTool needs this for Visual Studio projects
       "preset": "conan-debug_dir-debug",
       "dependsOn": "Python: build (Debug)",
     },
@@ -35,6 +36,7 @@
       "label": "CMake: build (Release)",
       "type": "cmake",
       "command": "build",
+      "targets": ["ALL_BUILD"], // CMakeTool needs this
       "preset": "conan-release_dir-release",
       "dependsOn": "Python: build (Release)",
     },
@@ -46,7 +48,7 @@
       "dependsOn": "Python: build (Release)",
     },
     {
-      "label": "Python: package deploy ZIP",
+      "label": "Deploy (compress)",
       "type": "shell",
       "command": "${workspaceFolder}\\.venv\\Scripts\\python",
       "args": ["scripts\\build.py", "package", "Release"],
