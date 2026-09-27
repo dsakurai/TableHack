@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QTableWidget>
+#include <QModelIndex>
+#include <QModelIndexList>
 
 class QStandardItemModel;
 
@@ -33,6 +35,6 @@ private:
     };
     /** Copy the specified range of cells to the clipboard. */
 
-    void copyCells(int r0, int r1, int c0, int c1) const;
+    void copyCells(const QModelIndexList &idxs) const;
     void removeSelectedLines(Line line);
 };

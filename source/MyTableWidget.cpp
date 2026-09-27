@@ -10,6 +10,7 @@
 #include <QHeaderView>
 #include <QMenu>
 #include <QAction>
+#include <QPointer>
 #include <QSet>
 #include <algorithm>
 
@@ -38,32 +39,72 @@ MyTableWidget::MyTableWidget(QWidget *parent)
     }
 }
 
-void MyTableWidget::copyCells(int r0, int r1, int c0, int c1) const
-{
-    QAbstractItemModel *m = model();
-    if (!m) {
-        return;
+class VisibleIndex {
+public:
+    VisibleIndex(const QModelIndex& idx, const MyTableWidget *w)
+        : index_(idx), tableWidget_(w) {}
+    
+    int row() const { 
+        return tableWidget_->verticalHeader()->visualIndex(index_.row());
     }
+    int column() const {
+        return tableWidget_->horizontalHeader()->visualIndex(index_.column());
+    }
+private:
+    const QModelIndex index_;
+    const QPointer<const MyTableWidget> tableWidget_;
+};
+
+void MyTableWidget::copyCells(const QModelIndexList &idxs) const
+{
+    if (idxs.isEmpty())
+        return;
+
+    QAbstractItemModel *m = model();
+    if (!m)
+        return;
+    
+    // compute bounding rectangle in visible (header) coordinates
+    int vr_min = INT_MAX, vr_max = INT_MIN, vc_min = INT_MAX, vc_max = INT_MIN;
+    for (const QModelIndex &idx : idxs) {
+        VisibleIndex v(idx, this);
+        int vr = v.row();
+        int vc = v.column();
+        vr_min = qMin(vr_min, vr);
+        vr_max = qMax(vr_max, vr);
+        vc_min = qMin(vc_min, vc);
+        vc_max = qMax(vc_max, vc);
+    }
+
+    const int num_rows = (vr_max - vr_min + 1);
+    const int num_cols = (vc_max - vc_min + 1);
+
+    // build matrix and fill on-the-fly using positions relative to r0/c0
+    QVector<QVector<QString>> matrix(num_rows, QVector<QString>(num_cols));
+    for (const QModelIndex &idx : idxs) {
+        VisibleIndex v(idx, this);
+        matrix[v.row() - vr_min][v.column() - vc_min] = m->data(idx, Qt::DisplayRole).toString();
+    }
+
+    // transform matrix -> HTML
     QString html;
     html += "<table>";
-    for (int r = r0; r <= r1; ++r) {
+    for (int r = 0; r < num_rows; ++r) {
         html += "<tr>";
-        for (int c = c0; c <= c1; ++c) {
-            QModelIndex idx = m->index(r, c);
-            QString cell = m->data(idx, Qt::DisplayRole).toString();
+        for (int c = 0; c < num_cols; ++c) {
+            QString cell = matrix[r][c];
             html += "<td>" + cell.toHtmlEscaped() + "</td>";
         }
         html += "</tr>";
     }
     html += "</table>";
 
+    // transform matrix -> plain TSV
     QStringList lines;
-    for (int r = r0; r <= r1; ++r) {
+    for (int r = 0; r < num_rows; ++r) {
         QStringList row;
-        for (int c = c0; c <= c1; ++c) {
-            QModelIndex idx = m->index(r, c);
-            row << m->data(idx, Qt::DisplayRole).toString();
-        }
+        for (int c = 0; c < num_cols; ++c)
+            row << matrix[r][c];
         lines << row.join('\t');
     }
     QString plain = lines.join("\r\n");
@@ -76,35 +117,22 @@ void MyTableWidget::copySelectionToClipboard()
     QItemSelectionModel *sel = selectionModel();
     if (!sel)
         return;
-    QModelIndexList idxs = sel->selectedIndexes();
-    int r0 = INT_MAX, r1 = INT_MIN, c0 = INT_MAX, c1 = INT_MIN;
-    for (const QModelIndex &idx : idxs) {
-        r0 = qMin(r0, idx.row());
-        r1 = qMax(r1, idx.row());
-        c0 = qMin(c0, idx.column());
-        c1 = qMax(c1, idx.column());
-    }
-    copyCells(r0, r1, c0, c1);
+    copyCells(sel->selectedIndexes());
 }
 
 void MyTableWidget::cutSelectionToClipboard()
 {
     QAbstractItemModel *m = model();
-    if (!m)
-        return;
+    if (!m) return;
+
     QItemSelectionModel *sel = selectionModel();
-    if (!sel)
-        return;
-    QModelIndexList idxs = sel->selectedIndexes();
-    // copy selected range then clear those cells
-    int r0 = INT_MAX, r1 = INT_MIN, c0 = INT_MAX, c1 = INT_MIN;
-    for (const QModelIndex &idx : idxs) {
-        r0 = qMin(r0, idx.row());
-        r1 = qMax(r1, idx.row());
-        c0 = qMin(c0, idx.column());
-        c1 = qMax(c1, idx.column());
-    }
-    copyCells(r0, r1, c0, c1);
+    if (!sel) return;
+
+    const QModelIndexList idxs = sel->selectedIndexes();
+    
+    // copy selected range
+    copyCells(idxs);
+    // then clear those cells
     for (const QModelIndex &idx : idxs)
         m->setData(idx, QString());
 }
@@ -119,14 +147,14 @@ void MyTableWidget::pasteFromClipboard()
     if (text.isEmpty())
         return;
 
-    // Determine start position: top-left of selection or (0,0)
-    int startRow = 0, startCol = 0;
-    QModelIndexList idxs = selectionModel() ? selectionModel()->selectedIndexes() : QModelIndexList();
-    if (!idxs.isEmpty()) {
-        int r = INT_MAX, c = INT_MAX;
-        for (const QModelIndex &i : idxs) { r = qMin(r, i.row()); c = qMin(c, i.column()); }
-        startRow = r; startCol = c;
-    }
+    // Determine start position: top-left of selection
+    const QModelIndexList idxs = selectionModel() ? selectionModel()->selectedIndexes() : QModelIndexList();
+    if (idxs.isEmpty()) {return;}
+    
+    if (idxs.size() > 1) {return;}
+    VisibleIndex visible {idxs.first(), this};
+    const int startRowVisible = visible.row();
+    const int startColVisible = visible.column();
 
     QStringList rows = text.split('\n');
     for (int r = 0; r < rows.size(); ++r) {
@@ -136,13 +164,17 @@ void MyTableWidget::pasteFromClipboard()
             line.chop(1);
         QStringList cells = line.split('\t');
         for (int c = 0; c < cells.size(); ++c) {
-            int rr = startRow + r;
-            int cc = startCol + c;
+            int rr = startRowVisible + r;
+            int cc = startColVisible + c;
             if (rr < 0 || cc < 0)
-                continue;
+                throw std::out_of_range("Negative index while pasting from clipboard");
             if (rr >= m->rowCount() || cc >= m->columnCount())
-                continue; // do not expand model here
-            m->setData(m->index(rr, cc), cells[c]);
+                continue; // clipboard content is larger than the model of the Table, do not expand model here
+
+            m->setData(m->index(
+                verticalHeader()->logicalIndex(rr),
+                horizontalHeader()->logicalIndex(cc)),
+                cells[c]);
         }
     }
 }
