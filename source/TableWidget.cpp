@@ -42,13 +42,15 @@ void TableWidget::showHorizontalHeaderContextMenu(const QPoint &pos)
     if (!h) return;
 
     QMenu menu(h);
-    QAction *insertBefore = menu.addAction(tr("Insert column before"));
-    QAction *insertAfter = menu.addAction(tr("Insert column after"));
-    QAction *removeAction = menu.addAction(tr("Remove selected columns"));
 
-    connect(insertBefore, &QAction::triggered, this, [this, pos]() { insertLine(RowOrColumn::Column, BeforeOrAfter::Before, pos); });
-    connect(insertAfter, &QAction::triggered, this,  [this, pos]() { insertLine(RowOrColumn::Column, BeforeOrAfter::After, pos); });
-    connect(removeAction, &QAction::triggered, this, [this]() { removeSelectedLine(RowOrColumn::Column); });
+    connect(menu.addAction(tr("Insert column before")), &QAction::triggered, this,
+            [this, pos]() { insertLine(RowOrColumn::Column, BeforeOrAfter::Before, pos); });
+
+    connect(menu.addAction(tr("Insert column after")), &QAction::triggered, this,
+            [this, pos]() { insertLine(RowOrColumn::Column, BeforeOrAfter::After, pos); });
+
+    connect(menu.addAction(tr("Remove selected columns")), &QAction::triggered, this,
+            [this]() { removeSelectedLine(RowOrColumn::Column); });
 
     // Show the context menu at the position of the cursor.
     menu.exec(h->mapToGlobal(pos));
@@ -61,13 +63,14 @@ void TableWidget::showVerticalHeaderContextMenu(const QPoint &pos)
     if (!h) return;
     
     QMenu menu(h);
-    QAction *insertBefore = menu.addAction(tr("Insert row before"));
-    QAction *insertAfter = menu.addAction(tr("Insert row after"));
-    QAction *removeAction = menu.addAction(tr("Remove selected rows"));
     
-    connect(insertBefore, &QAction::triggered, this, [this, pos]() { insertLine(RowOrColumn::Row, BeforeOrAfter::Before, pos); });
-    connect(insertAfter, &QAction::triggered, this,  [this, pos]() { insertLine(RowOrColumn::Row, BeforeOrAfter::After, pos); });
-    connect(removeAction, &QAction::triggered, this, [this]() { removeSelectedLine(RowOrColumn::Row); });
+    connect(menu.addAction(tr("Insert row before")), &QAction::triggered, this,
+            [this, pos]() { insertLine(RowOrColumn::Row, BeforeOrAfter::Before, pos); });
+
+    connect(menu.addAction(tr("Insert row after")), &QAction::triggered, this,
+            [this, pos]() { insertLine(RowOrColumn::Row, BeforeOrAfter::After, pos); });
+    connect(menu.addAction(tr("Remove selected rows")), &QAction::triggered, this,
+            [this]() { removeSelectedLine(RowOrColumn::Row); });
 
     // Show the context menu at the position of the cursor.
     menu.exec(h->mapToGlobal(pos));
