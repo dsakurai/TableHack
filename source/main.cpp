@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QVBoxLayout>
 #include "MyTableWidget.h"
+#include "VisibleIndexTableWidget.h"
 #include <QTableWidget>
 #include <clipboard_win32.h>
 
@@ -19,9 +20,9 @@ int main(int argc, char *argv[])
     QVBoxLayout *layout = new QVBoxLayout(&window);
 
     // Table widget with sample data (use QTableWidget for simple headers)
-    MyTableWidget *tableWidget = new MyTableWidget(&window);
-    tableWidget->setRowCount(3);
-    tableWidget->setColumnCount(3);
+    auto *tableWidget = new VisibleIndexTableWidget(&window);
+    // tableWidget->setRowCount(3);
+    // tableWidget->setColumnCount(3);
 
     QPushButton *btn = new QPushButton("Copy HTML table (Win32 CF_HTML v2)", &window);
 

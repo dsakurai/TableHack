@@ -14,7 +14,7 @@
 #include <algorithm>
 
 MyTableWidget::MyTableWidget(QWidget *parent)
-    : VisibleIndexTableWidget(parent)
+    : QTableWidget(parent)
 {
     // Move rows and columns within the table.
     horizontalHeader()->setSectionsMovable(true);

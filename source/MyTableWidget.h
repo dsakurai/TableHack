@@ -1,8 +1,8 @@
 #pragma once
 
-#include "VisibleIndexTableWidget.h"
+#include <QTableWidget>
 
-class MyTableWidget : public VisibleIndexTableWidget {
+class MyTableWidget : public QTableWidget {
     Q_OBJECT
 public:
     explicit MyTableWidget(QWidget *parent = nullptr);
