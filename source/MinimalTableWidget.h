@@ -13,9 +13,6 @@ public slots:
     void showHorizontalHeaderContextMenu(const QPoint &pos);
     void showVerticalHeaderContextMenu(const QPoint &pos);
 
-protected:
-    void keyPressEvent(QKeyEvent *event) override;
-
 private:
     enum class RowOrColumn {
         Row,

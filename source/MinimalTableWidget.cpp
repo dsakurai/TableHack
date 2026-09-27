@@ -6,7 +6,6 @@
 #include <clipboard_win32.h>
 #include <QClipboard>
 #include <QApplication>
-#include <QKeyEvent>
 #include <QHeaderView>
 #include <QMenu>
 #include <QAction>
@@ -175,23 +174,6 @@ void MinimalTableWidget::pasteFromClipboard()
                 cells[c]);
         }
     }
-}
-
-void MinimalTableWidget::keyPressEvent(QKeyEvent *event)
-{
-    if ((event->modifiers() & Qt::ControlModifier) && event->key() == Qt::Key_C) {
-        copySelectionToClipboard();
-        return;
-    }
-    if ((event->modifiers() & Qt::ControlModifier) && event->key() == Qt::Key_X) {
-        cutSelectionToClipboard();
-        return;
-    }
-    if ((event->modifiers() & Qt::ControlModifier) && event->key() == Qt::Key_V) {
-        pasteFromClipboard();
-        return;
-    }
-    QTableWidget::keyPressEvent(event);
 }
 
 struct VisualIndex {
