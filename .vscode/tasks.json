@@ -11,7 +11,7 @@
       "options": {"cwd": "${workspaceFolder}"},
     },
     {
-      "label": "Python: build",
+      "label": "Python: build (Release)",
       "type": "shell",
       "command": "${workspaceFolder}\\.venv\\Scripts\\python",
       "args": ["scripts\\build.py", "build", "Release"],
@@ -19,19 +19,19 @@
     },
     { // This is visible from the CMakeTool extension in VS Code
       // "label": "CMake: build conan (debug)",
-      "label": "CMake: build (release)",
+      "label": "CMake: build (Release)",
       "type": "cmake",
       "command": "build",
       // "preset": "conan-debug",
       "preset": "conan-release",
-      "dependsOn": "Python: build",
+      "dependsOn": "Python: build (Release)",
     },
     {
       "label": "CMake: deploy (Release)",
       "type": "shell",
       "command": "${workspaceFolder}\\.venv\\Scripts\\cmake",
       "args": ["--build", "${workspaceFolder}\\build-Release", "--preset", "conan-release", "--config", "Release", "--target", "deploy"],
-      "dependsOn": "CMake: build (release)",
+      "dependsOn": "Python: build (Release)",
     },
     {
       "label": "Python: package deploy ZIP",
