@@ -222,13 +222,13 @@ void MyTableWidget::showHorizontalHeaderContextMenu(const QPoint &pos)
 
     connect(insertBefore, &QAction::triggered, this, [this, vi]() { insertColumn(vi.visualIndex); });
     connect(insertAfter, &QAction::triggered, this,  [this, vi]() { insertColumn(vi.visualIndexPlusOne); });
-    connect(removeAction, &QAction::triggered, this, &MyTableWidget::removeSelectedColumns);
+    connect(removeAction, &QAction::triggered, this, [this]() { removeSelectedLine(RowOrColumn::Column); });
 
     // Show the context menu at the position of the cursor.
     menu.exec(h->mapToGlobal(pos));
 }
 
-void MyTableWidget::removeSelectedLines(Line line)
+void MyTableWidget::removeSelectedLine(RowOrColumn rc)
 {
     QItemSelectionModel *sel = selectionModel();
     if (!sel) return;
@@ -236,26 +236,19 @@ void MyTableWidget::removeSelectedLines(Line line)
     QSet<int> columns; // either column coordinates or row coordinates. Regarding the variable naming, we just assume it's columns
 
     for (const QModelIndex &cell : sel->selectedIndexes()) {
-        if (line == Line::Columns)
+        if (rc == RowOrColumn::Column)
             columns.insert(cell.column());
-        if (line == Line::Rows)
+        if (rc == RowOrColumn::Row)
             columns.insert(cell.row());
     }
-    if (columns.isEmpty())
-        return;
 
     QList<int> columnList = columns.values();
     std::sort(columnList.begin(), columnList.end(), std::greater<int>());
     for (int c : columnList)
-        if (line == Line::Columns)
+        if (rc == RowOrColumn::Column)
             removeColumn(c);
-        else if (line == Line::Rows)
+        else if (rc == RowOrColumn::Row)
             removeRow(c);
-}
-
-void MyTableWidget::removeSelectedColumns()
-{
-    removeSelectedLines(Line::Columns);
 }
 
 void MyTableWidget::showVerticalHeaderContextMenu(const QPoint &pos)
@@ -273,13 +266,8 @@ void MyTableWidget::showVerticalHeaderContextMenu(const QPoint &pos)
 
     connect(insertBefore, &QAction::triggered, this, [this, vi]() { insertRow(vi.visualIndex); });
     connect(insertAfter, &QAction::triggered, this,  [this, vi]() { insertRow(vi.visualIndexPlusOne); });
-    connect(removeAction, &QAction::triggered, this, &MyTableWidget::removeSelectedRows);
+    connect(removeAction, &QAction::triggered, this, [this]() { removeSelectedLine(RowOrColumn::Row); });
 
     // Show the context menu at the position of the cursor.
     menu.exec(h->mapToGlobal(pos));
-}
-
-void MyTableWidget::removeSelectedRows()
-{
-    removeSelectedLines(Line::Rows);
 }

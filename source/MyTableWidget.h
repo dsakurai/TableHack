@@ -15,20 +15,20 @@ public slots:
     void cutSelectionToClipboard();
     void pasteFromClipboard();
     void showHorizontalHeaderContextMenu(const QPoint &pos);
-    void removeSelectedColumns();
     void showVerticalHeaderContextMenu(const QPoint &pos);
-    void removeSelectedRows();
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
 
 private:
-    enum class Line {
-        Rows,
-        Columns,
+    enum class RowOrColumn {
+        Row,
+        Column,
     };
-    /** Copy the specified range of cells to the clipboard. */
 
+    /** Copy the specified range of cells to the clipboard. */
     void copyCells(const QModelIndexList &idxs) const;
-    void removeSelectedLines(Line line);
+
+    /** Remove the selected rows or columns. */
+    void removeSelectedLine(RowOrColumn rc);
 };
