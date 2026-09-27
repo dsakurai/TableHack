@@ -43,10 +43,6 @@ def cmd_build(_args):
         [str(cmake), "--preset", "conan-default", "-DCMAKE_CONFIGURATION_TYPES=Release"],
         cwd=WORKSPACE,
     )
-    run(
-        [str(cmake), "--build", "--preset", "conan-release"],
-        cwd=WORKSPACE,
-    )
 
 
 def cmd_package(_args):

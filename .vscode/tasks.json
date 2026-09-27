@@ -31,6 +31,22 @@
       "problemMatcher": [],
       "dependsOn": "uv: sync",
     },
+    { // This is visible from the CMakeTool extension in VS Code
+      // "label": "CMake: build conan (debug)",
+      "label": "CMake: build (release)",
+      "type": "cmake",
+      "command": "build",
+      // "preset": "conan-debug",
+      "preset": "conan-release",
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": {
+        "reveal": "silent",
+        "echo": true,
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "dependsOn": "Python: build",
+    },
     {
       "label": "CMake: deploy (Release)",
       "type": "shell",
@@ -41,7 +57,7 @@
         "echo": true,
         "panel": "shared"
       },
-      "dependsOn": "Python: build",
+      "dependsOn": "CMake: build (release)",
       "problemMatcher": []
     },
     {
