@@ -5,6 +5,9 @@
 
 #include <QTableWidget>
 
+class VisibleIndexModelIndexList;
+class VisibleHeader;
+
 /**
  * This class implements the use of visible indices in the table widget.
  * This is useful to avoid confusion when coding with indices in the table widget.
@@ -23,6 +26,10 @@ public:
         if (qTableWidget_) qTableWidget_->setColumnCount(columnCount);
     }
 
+    // VisibleIndexModelIndexList selectedIndexes() const;
+
 private:
     QPointer<QTableWidget> qTableWidget_;
+    QPointer<VisibleHeader> horizontalHeader_;
+    QPointer<VisibleHeader> verticalHeader_;
 };

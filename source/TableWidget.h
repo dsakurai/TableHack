@@ -6,4 +6,5 @@ class TableWidget : public VisibleIndexTableWidget {
     Q_OBJECT
 public:
     explicit TableWidget(QWidget *parent = nullptr);
+    void insertRowBelow();
 };

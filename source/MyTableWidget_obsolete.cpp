@@ -65,21 +65,6 @@ void MyTableWidget::copyCells(int r0, int r1, int c0, int c1) const
     copyHtmlToClipboardWin32(html, plain);
 }
 
-void MyTableWidget::copySelectionToClipboard()
-{
-    QItemSelectionModel *sel = selectionModel();
-    if (!sel)
-        return;
-    QModelIndexList idxs = sel->selectedIndexes();
-    int r0 = INT_MAX, r1 = INT_MIN, c0 = INT_MAX, c1 = INT_MIN;
-    for (const QModelIndex &idx : idxs) {
-        r0 = qMin(r0, idx.row());
-        r1 = qMax(r1, idx.row());
-        c0 = qMin(c0, idx.column());
-        c1 = qMax(c1, idx.column());
-    }
-    copyCells(r0, r1, c0, c1);
-}
 
 void MyTableWidget::cutSelectionToClipboard()
 {
