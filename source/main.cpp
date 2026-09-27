@@ -21,8 +21,8 @@ int main(int argc, char *argv[])
 
     // Table widget with sample data (use QTableWidget for simple headers)
     auto *tableWidget = new VisibleIndexTableWidget(&window);
-    // tableWidget->setRowCount(3);
-    // tableWidget->setColumnCount(3);
+    tableWidget->setRowCount(3);
+    tableWidget->setColumnCount(3);
 
     QPushButton *btn = new QPushButton("Copy HTML table (Win32 CF_HTML v2)", &window);
 

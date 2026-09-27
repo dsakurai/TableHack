@@ -3,7 +3,7 @@
 #include <QWidget>
 #include <QPointer>
 
-class QTableWidget;
+#include <QTableWidget>
 
 /**
  * This class implements the use of visible indices in the table widget.
@@ -14,6 +14,14 @@ class VisibleIndexTableWidget: public QWidget {
 public:
     explicit VisibleIndexTableWidget(QWidget *parent = nullptr);
     ~VisibleIndexTableWidget() override;
+
+    void setRowCount(int rowCount) {
+        if (qTableWidget_) qTableWidget_->setRowCount(rowCount);
+    }
+    
+    void setColumnCount(int columnCount) {
+        if (qTableWidget_) qTableWidget_->setColumnCount(columnCount);
+    }
 
 private:
     QPointer<QTableWidget> qTableWidget_;
