@@ -9,8 +9,8 @@ add_executable(example)
 target_sources(example
     PRIVATE
     main.cpp
-    MyTableWidget.cpp
-    MyTableWidget.h
+    MyTableWidget_obsolete.cpp
+    MyTableWidget_obsolete.h
     VisibleIndexTableWidget.cpp
     VisibleIndexTableWidget.h
 )

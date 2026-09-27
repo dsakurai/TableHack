@@ -1,4 +1,5 @@
-#include "MyTableWidget.h"
+#include "MyTableWidget_obsolete.h"
+
 #include <QStandardItemModel>
 #include <QStandardItem>
 #include <QAbstractItemModel>
