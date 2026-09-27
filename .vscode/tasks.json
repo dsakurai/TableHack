@@ -17,19 +17,12 @@
       "problemMatcher": []
     },
     {
-      "label": "Create build folder",
+      "label": "Python: build",
       "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-Command",
-        "md",
-        "-Force",
-        "build",
-      ],
+      "command": "${workspaceFolder}\\.venv\\Scripts\\python",
+      "args": ["scripts\\build.py", "build"],
       "options": {"cwd": "${workspaceFolder}"},
+      "group": { "kind": "build", "isDefault": true },
       "presentation": {
         "reveal": "silent",
         "echo": true,
@@ -37,68 +30,6 @@
       },
       "problemMatcher": [],
       "dependsOn": "uv: sync",
-    },
-    {
-      "label": "Conan: install",
-      "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-Command",
-        // `-s   build_type=Release` sets the overall build type for the dependencies.
-        // `-s &:build_type=Release` sets the build type for this project's source code.
-        // "& '../.venv/Scripts/conan.exe' install .. --build=missing -s build_type=Release -s `&:build_type=Debug -c tools.env.virtualenv:powershell=powershell.exe -c tools.env:dotenv=true"
-        "& '../.venv/Scripts/conan.exe' install .. --build=missing -s build_type=Release -s `&:build_type=Release -c tools.env.virtualenv:powershell=powershell.exe -c tools.env:dotenv=true"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}/build",
-        "env": {
-          "Path": "${workspaceFolder}\\.venv\\Scripts;${env:Path}"
-        }
-      },
-      "presentation": {
-        "reveal": "silent",
-        "echo": true,
-        "panel": "shared"
-      },
-      "dependsOn": ["Create build folder"],
-      "problemMatcher": []
-    },
-    {
-      "label": "CMake: configure conan-default",
-      "type": "shell",
-      "command": "${workspaceFolder}\\.venv\\Scripts\\cmake",
-      "args": ["--preset", "conan-default",
-              // Explicitly set here because Conan forgets to set this cache variable for MSVC.
-              //  "-DCMAKE_CONFIGURATION_TYPES=Debug"
-               "-DCMAKE_CONFIGURATION_TYPES=Release"
-            ],
-      "group": "build",
-      "presentation": {
-        "reveal": "silent",
-        "echo": true,
-        "panel": "shared"
-      },
-      "problemMatcher": [],
-      "dependsOn": "Conan: install",
-    },
-    {
-      // "label": "CMake: build conan (debug)",
-      "label": "CMake: build conan (release)",
-      "type": "cmake",
-      "command": "build",
-      // "preset": "conan-debug",
-      "preset": "conan-release",
-      "dependsOn": "CMake: configure conan-default",
-      "group": { "kind": "build", "isDefault": true },
-      "presentation": {
-        "reveal": "silent",
-        "echo": true,
-        "panel": "shared"
-      },
-      "problemMatcher": []
     },
     {
       "label": "CMake: deploy (Release)",
@@ -110,22 +41,15 @@
         "echo": true,
         "panel": "shared"
       },
-      "dependsOn": "CMake: build conan (release)",
+      "dependsOn": "Python: build",
       "problemMatcher": []
     },
     {
-      "label": "Package: deploy ZIP",
+      "label": "Python: package deploy ZIP",
       "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "${workspaceFolder}\\.vscode\\package_deploy.ps1",
-        "-Workspace",
-        "${workspaceFolder}"
-      ],
+      "command": "${workspaceFolder}\\.venv\\Scripts\\python",
+      "args": ["scripts\\build.py", "package"],
+      "options": {"cwd": "${workspaceFolder}"},
       "group": "build",
       "presentation": { "echo": true, "panel": "shared" },
       "dependsOn": "CMake: deploy (Release)",
