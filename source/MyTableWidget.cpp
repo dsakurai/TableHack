@@ -16,13 +16,6 @@
 MyTableWidget::MyTableWidget(QWidget *parent)
     : QTableWidget(parent)
 {
-    // Move rows and columns within the table.
-    horizontalHeader()->setSectionsMovable(true);
-    horizontalHeader()->setDragEnabled(true);
-    //
-    verticalHeader()->setSectionsMovable(true);
-    verticalHeader()->setDragEnabled(true);
-
     // provide context menu on horizontal header for column actions
     QHeaderView *h = horizontalHeader();
     if (h) {
