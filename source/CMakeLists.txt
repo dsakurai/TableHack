@@ -11,6 +11,8 @@ target_sources(example
     main.cpp
     MinimalTableWidget.cpp
     MinimalTableWidget.h
+    TableWidget.h
+    TableWidget.cpp
 )
 
 target_link_libraries(example PUBLIC Qt6::Widgets html_clipboard)

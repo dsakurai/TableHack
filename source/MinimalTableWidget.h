@@ -2,8 +2,6 @@
 
 #include <QTableWidget>
 
-class QStandardItemModel;
-
 class MinimalTableWidget : public QTableWidget {
     Q_OBJECT
 public:
