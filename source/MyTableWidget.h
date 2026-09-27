@@ -1,10 +1,8 @@
 #pragma once
 
-#include <QTableWidget>
+#include "VisibleIndexTableWidget.h"
 
-class QStandardItemModel;
-
-class MyTableWidget : public QTableWidget {
+class MyTableWidget : public VisibleIndexTableWidget {
     Q_OBJECT
 public:
     explicit MyTableWidget(QWidget *parent = nullptr);
