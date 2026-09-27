@@ -9,11 +9,6 @@
         "sync",
       ],
       "options": {"cwd": "${workspaceFolder}"},
-      "presentation": {
-        "reveal": "silent",
-        "echo": true,
-        "panel": "shared"
-      },
     },
     {
       "label": "Python: build",
