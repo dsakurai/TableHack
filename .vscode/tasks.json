@@ -2,27 +2,6 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Create build folder",
-      "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-Command",
-        "md",
-        "-Force",
-        "build",
-      ],
-      "options": {"cwd": "${workspaceFolder}"},
-      "presentation": {
-        "reveal": "silent",
-        "echo": true,
-        "panel": "shared"
-      },
-      "problemMatcher": []
-    },
-    {
       "label": "uv: sync",
       "type": "shell",
       "command": "uv",
@@ -30,69 +9,51 @@
         "sync",
       ],
       "options": {"cwd": "${workspaceFolder}"},
-      "presentation": {
-        "reveal": "silent",
-        "echo": true,
-        "panel": "shared"
-      },
-      "dependsOn": "Create build folder",
-      "problemMatcher": []
     },
     {
-      "label": "Conan: install",
+      "label": "Python: build (Debug)",
       "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-Command",
-        // `-s   build_type=Release` sets the overall build type for the dependencies.
-        // `-s &:build_type=Release` sets the build type for this project's source code.
-        "& '../.venv/Scripts/conan.exe' install .. --build=missing -s build_type=Release -s `&:build_type=Debug -c tools.env.virtualenv:powershell=powershell.exe -c tools.env:dotenv=true"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}/build",
-        "env": {
-          "Path": "${workspaceFolder}\\.venv\\Scripts;${env:Path}"
-        }
-      },
-      "presentation": {
-        "reveal": "silent",
-        "echo": true,
-        "panel": "shared"
-      },
-      "dependsOn": ["uv: sync"],
-      "problemMatcher": []
+      "command": "${workspaceFolder}\\.venv\\Scripts\\python",
+      "args": ["scripts\\build.py", "build", "Debug"],
+      "dependsOn": "uv: sync",
     },
     {
-      "label": "CMake: configure conan-default",
+      "label": "Python: build (Release)",
       "type": "shell",
-      "command": "${workspaceFolder}\\.venv\\Scripts\\cmake",
-      "args": ["--preset", "conan-default",
-               "-DCMAKE_CONFIGURATION_TYPES=Debug" // Explicitly set here because Conan forgets to set this cache variable for MSVC.
-            ],
-      "group": "build",
-      "presentation": {
-        "reveal": "silent",
-        "echo": true,
-        "panel": "shared"
-      },
-      "problemMatcher": [],
-      "dependsOn": "Conan: install",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\python",
+      "args": ["scripts\\build.py", "build", "Release"],
+      "dependsOn": "uv: sync",
     },
-    {
-      "label": "CMake: build conan (debug)",
+    { // This is visible from the CMakeTool extension in VS Code
+      "label": "CMake: build (Debug)",
       "type": "cmake",
       "command": "build",
-      "preset": "conan-debug",
-      "dependsOn": "CMake: configure conan-default",
-      "group": { "kind": "build", "isDefault": true },
-      "presentation": {
-        "reveal": "silent",
-        "echo": true,
-        "panel": "shared"
-      },
+      "preset": "conan-debug_dir-debug",
+      "dependsOn": "Python: build (Debug)",
+    },
+    { // This is visible from the CMakeTool extension in VS Code
+      "label": "CMake: build (Release)",
+      "type": "cmake",
+      "command": "build",
+      "preset": "conan-release_dir-release",
+      "dependsOn": "Python: build (Release)",
+    },
+    {
+      "label": "CMake: deploy (Release)",
+      "type": "shell",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\cmake",
+      "args": ["--build", "${workspaceFolder}\\build-Release", "--preset", "conan-release_dir-release", "--config", "Release", "--target", "deploy"],
+      "dependsOn": "Python: build (Release)",
+    },
+    {
+      "label": "Python: package deploy ZIP",
+      "type": "shell",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\python",
+      "args": ["scripts\\build.py", "package", "Release"],
+      "options": {"cwd": "${workspaceFolder}"},
+      "group": "build",
+      "presentation": { "echo": true, "panel": "shared" },
+      "dependsOn": "CMake: deploy (Release)",
       "problemMatcher": []
     },
   ]

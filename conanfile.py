@@ -24,12 +24,17 @@ class QtConan(ConanFile):
 
     def layout(self):
         cmake_layout(self)
+        # Keep Debug/Release outputs side by side instead of sharing one "build" folder.
+        self.folders.build = f"build-{self.settings.build_type}"
+        self.folders.generators = f"{self.folders.build}/generators"
 
     def generate(self):
         deps = CMakeDeps(self)
         deps.generate()
 
         tc = CMakeToolchain(self)
+        # "_dir" marks the build-folder-scoping part, distinct from Conan's own build-type suffix (e.g. conan-debug_dir-debug).
+        tc.presets_prefix = f"conan-{str(self.settings.build_type).lower()}_dir"
         tc.generate()
 
         # VirtualRunEnv(self).generate() # Not needed if we pass the option to generate the "dotenv" file from the command line.
