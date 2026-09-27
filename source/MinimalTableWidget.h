@@ -11,8 +11,14 @@ public:
         Row,
         Column,
     };
+    enum class BeforeOrAfter {
+        Before,
+        After,
+    };
     /** Remove the selected rows or columns. */
     void removeSelectedLine(RowOrColumn rc);
+    /** Insert a row or column before or after the specified position in the header. */
+    void insertLine(RowOrColumn rc, BeforeOrAfter ba, const QPoint& posInHeader);
 
 public slots:
     void copySelectionToClipboard();

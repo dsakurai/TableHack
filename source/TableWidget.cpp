@@ -36,19 +36,6 @@ void TableWidget::keyPressEvent(QKeyEvent *event)
     QTableWidget::keyPressEvent(event);
 }
 
-struct VisualIndex {
-    int visualIndex;
-    int visualIndexPlusOne;
-};
-
-VisualIndex getVisualIndex(const QHeaderView *h, int logicalIndex) {
-    const int visualIndex = h->visualIndex(logicalIndex);
-    const int num_columns = h->count();
-    const int afterVisualIndex = visualIndex + 1;
-    const int visualIndexPlusOne = (afterVisualIndex < num_columns) ? h->logicalIndex(afterVisualIndex) : num_columns;
-    return VisualIndex{visualIndex, visualIndexPlusOne};
-}
-
 void TableWidget::showHorizontalHeaderContextMenu(const QPoint &pos)
 {
     QHeaderView *h = horizontalHeader();
@@ -59,11 +46,8 @@ void TableWidget::showHorizontalHeaderContextMenu(const QPoint &pos)
     QAction *insertAfter = menu.addAction(tr("Insert column after"));
     QAction *removeAction = menu.addAction(tr("Remove selected columns"));
 
-    const int logicalIndex = h->logicalIndexAt(pos);
-    VisualIndex vi = getVisualIndex(h, logicalIndex);
-
-    connect(insertBefore, &QAction::triggered, this, [this, vi]() { insertColumn(vi.visualIndex); });
-    connect(insertAfter, &QAction::triggered, this,  [this, vi]() { insertColumn(vi.visualIndexPlusOne); });
+    connect(insertBefore, &QAction::triggered, this, [this, pos]() { insertLine(RowOrColumn::Column, BeforeOrAfter::Before, pos); });
+    connect(insertAfter, &QAction::triggered, this,  [this, pos]() { insertLine(RowOrColumn::Column, BeforeOrAfter::After, pos); });
     connect(removeAction, &QAction::triggered, this, [this]() { removeSelectedLine(RowOrColumn::Column); });
 
     // Show the context menu at the position of the cursor.
@@ -81,11 +65,8 @@ void TableWidget::showVerticalHeaderContextMenu(const QPoint &pos)
     QAction *insertAfter = menu.addAction(tr("Insert row after"));
     QAction *removeAction = menu.addAction(tr("Remove selected rows"));
     
-    const int logicalIndex = h->logicalIndexAt(pos);
-    VisualIndex vi = getVisualIndex(h, logicalIndex);
-
-    connect(insertBefore, &QAction::triggered, this, [this, vi]() { insertRow(vi.visualIndex); });
-    connect(insertAfter, &QAction::triggered, this,  [this, vi]() { insertRow(vi.visualIndexPlusOne); });
+    connect(insertBefore, &QAction::triggered, this, [this, pos]() { insertLine(RowOrColumn::Row, BeforeOrAfter::Before, pos); });
+    connect(insertAfter, &QAction::triggered, this,  [this, pos]() { insertLine(RowOrColumn::Row, BeforeOrAfter::After, pos); });
     connect(removeAction, &QAction::triggered, this, [this]() { removeSelectedLine(RowOrColumn::Row); });
 
     // Show the context menu at the position of the cursor.

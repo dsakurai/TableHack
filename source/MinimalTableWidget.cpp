@@ -186,3 +186,37 @@ void MinimalTableWidget::removeSelectedLine(RowOrColumn rc)
         else if (rc == RowOrColumn::Row)
             removeRow(c);
 }
+
+struct VisualIndex {
+    int visualIndex;
+    int visualIndexPlusOne;
+};
+
+VisualIndex getVisualIndex(const QHeaderView *h, int logicalIndex) {
+    const int visualIndex = h->visualIndex(logicalIndex);
+    const int num_columns = h->count();
+    const int afterVisualIndex = visualIndex + 1;
+    const int visualIndexPlusOne = (afterVisualIndex < num_columns) ? h->logicalIndex(afterVisualIndex) : num_columns;
+    return VisualIndex{visualIndex, visualIndexPlusOne};
+}
+
+void MinimalTableWidget::insertLine(RowOrColumn rc, BeforeOrAfter ba, const QPoint& posInHeader)
+{
+    const QHeaderView *h = (rc == RowOrColumn::Row) ? verticalHeader() : horizontalHeader();
+    if (!h) return;
+    
+    const int logicalIndex = h->logicalIndexAt(posInHeader);
+    VisualIndex vi = getVisualIndex(h, logicalIndex);
+    
+    if (rc == RowOrColumn::Column) {
+        if (ba == BeforeOrAfter::Before)
+            insertColumn(vi.visualIndex);
+        else
+            insertColumn(vi.visualIndexPlusOne);
+    } else if (rc == RowOrColumn::Row) {
+        if (ba == BeforeOrAfter::Before)
+            insertRow(vi.visualIndex);
+        else
+            insertRow(vi.visualIndexPlusOne);
+    }
+}
