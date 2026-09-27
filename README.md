@@ -25,6 +25,8 @@ This project is tested using the Visual Studio compiler:
 CMAKE_GENERATOR_INSTANCE:INTERNAL=C:/Program Files/Microsoft Visual Studio/18/Community
 ```
 
+On the command pallette, activate `CMake: Set Build Target` and choose `ALL_BUILD` or some proper target you want to build. Somehow, CMakeTool tends to default to `all`, which is invalid for the Visual Studio project. This issue started to appear only since the following commit: `da901a5b591bd9ce2405320dd7b77e57710ee721` with the commit message `Rename the preset.` on 2026-09-28. So, maybe there's a fix to this. But it's possibly a bug. Not sure whether I should fix it.
+
 ## Auto build on VSCode 
 
 Press F5.
