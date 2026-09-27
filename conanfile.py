@@ -33,8 +33,8 @@ class QtConan(ConanFile):
         deps.generate()
 
         tc = CMakeToolchain(self)
-        # Distinct preset names per build folder, avoids "conan-default" collision in CMakeUserPresets.json.
-        tc.presets_prefix = f"conan-{str(self.settings.build_type).lower()}"
+        # "_dir" marks the build-folder-scoping part, distinct from Conan's own build-type suffix (e.g. conan-debug_dir-debug).
+        tc.presets_prefix = f"conan-{str(self.settings.build_type).lower()}_dir"
         tc.generate()
 
         # VirtualRunEnv(self).generate() # Not needed if we pass the option to generate the "dotenv" file from the command line.

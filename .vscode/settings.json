@@ -1,7 +1,7 @@
 {
   "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
-  "cmake.configurePreset": "conan-default",
-  "cmake.buildPreset": "conan-debug",
+  "cmake.configurePreset": "conan-debug_dir-default",
+  "cmake.buildPreset": "conan-debug_dir-debug",
   "tasks.runTask": "Run: conanrun.ps1",
   "cmake.cmakePath": "${workspaceFolder}\\.venv\\Scripts\\cmake.exe",
   "cmake.buildTask": true,
