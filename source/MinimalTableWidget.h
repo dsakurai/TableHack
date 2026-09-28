@@ -2,6 +2,11 @@
 
 #include <QTableWidget>
 
+/**
+ * Data equals QTableWidget::text() (i.e. QString).
+ * We copy and paste data as just QString text (one QString instance per cell).
+ * No fonts or other formatting is considered data.
+ */
 class MinimalTableWidget : public QTableWidget {
     Q_OBJECT
 public:
