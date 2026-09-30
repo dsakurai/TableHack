@@ -5,7 +5,7 @@
 #include <QMenu>
 
 TableWidget::TableWidget(QWidget *parent)
-    : MinimalTableWidget(parent) {
+    : UndoableTableWidget(parent) {
     // provide context menu on horizontal header for column actions
     if (QHeaderView *h = horizontalHeader()) {
         h->setContextMenuPolicy(Qt::CustomContextMenu);

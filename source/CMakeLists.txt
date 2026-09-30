@@ -13,6 +13,8 @@ target_sources(example
     MinimalTableWidget.h
     TableWidget.h
     TableWidget.cpp
+    UndoableTableWidget.cpp
+    UndoableTableWidget.h
 )
 
 target_link_libraries(example PUBLIC Qt6::Widgets html_clipboard)

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "MinimalTableWidget.h"
+#include "UndoableTableWidget.h"
 
-class TableWidget : public MinimalTableWidget {
+class TableWidget : public UndoableTableWidget {
     Q_OBJECT
 public:
     explicit TableWidget(QWidget *parent = nullptr);
