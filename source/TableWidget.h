@@ -5,7 +5,7 @@
 class TableWidget : public UndoableTableWidget {
     Q_OBJECT
 public:
-    explicit TableWidget(QWidget *parent = nullptr);
+    explicit TableWidget(int rows, int columns, QWidget *parent = nullptr);
 
 public slots:
     void showHorizontalHeaderContextMenu(const QPoint &pos);

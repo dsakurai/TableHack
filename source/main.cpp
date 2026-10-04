@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     QVBoxLayout *layout = new QVBoxLayout(&window);
 
     // Table widget with sample data (use QTableWidget for simple headers)
-    auto *tableWidget = new TableWidget(&window);
+    auto *tableWidget = new TableWidget(1, 1, &window);
     tableWidget->setRowCount(3);
     tableWidget->setColumnCount(3);
 
