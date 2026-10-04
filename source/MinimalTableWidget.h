@@ -10,7 +10,7 @@
 class MinimalTableWidget : public QTableWidget {
     Q_OBJECT
 public:
-    explicit MinimalTableWidget(QWidget *parent = nullptr);
+    explicit MinimalTableWidget(int rows, int columns, QWidget *parent = nullptr);
 
     enum class RowOrColumn {
         Row,

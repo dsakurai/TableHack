@@ -13,8 +13,8 @@
 #include <QSet>
 #include <algorithm>
 
-MinimalTableWidget::MinimalTableWidget(QWidget *parent)
-    : QTableWidget(parent)
+MinimalTableWidget::MinimalTableWidget(int rows, int columns, QWidget *parent)
+    : QTableWidget(rows, columns, parent)
 {
     // Move rows and columns within the table.
     horizontalHeader()->setSectionsMovable(true);

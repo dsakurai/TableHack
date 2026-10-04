@@ -4,8 +4,8 @@
 #include <QHeaderView>
 #include <QMenu>
 
-TableWidget::TableWidget(QWidget *parent)
-    : MinimalTableWidget(parent) {
+TableWidget::TableWidget(int rows, int columns, QWidget *parent)
+    : UndoableTableWidget(rows, columns, parent) {
     // provide context menu on horizontal header for column actions
     if (QHeaderView *h = horizontalHeader()) {
         h->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -31,6 +31,18 @@ void TableWidget::keyPressEvent(QKeyEvent *event)
     }
     if ((event->modifiers() & Qt::ControlModifier) && event->key() == Qt::Key_V) {
         pasteFromClipboard();
+        return;
+    }
+    if ((event->modifiers() & Qt::ControlModifier)
+        && !(event->modifiers() & Qt::ShiftModifier)
+        && event->key() == Qt::Key_Z) {
+        undo();
+        return;
+    }
+    if ((event->modifiers() & Qt::ControlModifier)
+        && (event->key() == Qt::Key_Y
+            || (event->key() == Qt::Key_Z && (event->modifiers() & Qt::ShiftModifier)))) {
+        redo();
         return;
     }
     QTableWidget::keyPressEvent(event);
